@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKIDS Advanced - Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brain: {
+                            50: '#f3f0ff',
+                            100: '#ede9fe',
+                            500: '#8b5fbf',
+                            600: '#7c3aed',
+                        },
+                        cardiovascular: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            500: '#e91e63',
+                            600: '#db2777',
+                        },
+                        respiratory: {
+                            50: '#ecfeff',
+                            100: '#cffafe',
+                            500: '#00bcd4',
+                            600: '#0891b2',
+                        },
+                        digestive: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#4caf50',
+                            600: '#16a34a',
+                        },
+                        sensory: {
+                            50: '#fffbeb',
+                            100: '#fef3c7',
+                            500: '#ff9800',
+                            600: '#f59e0b',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-display { font-family: 'Poppins', sans-serif; }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-float-delay { animation: float 6s ease-in-out infinite 2s; }
+        .animate-float-delay-2 { animation: float 6s ease-in-out infinite 4s; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        .organ-hover:hover { transform: scale(1.1); transition: all 0.3s ease; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-white to-purple-50">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <div class="relative">
+                        <div class="w-8 h-8 text-cardiovascular-500">❤️</div>
+                        <div class="absolute inset-0 animate-pulse-slow">
+                            <div class="w-8 h-8 text-cardiovascular-300">❤️</div>
+                        </div>
+                    </div>
+                    <span class="text-2xl font-display font-bold bg-gradient-to-r from-brain-600 to-cardiovascular-600 bg-clip-text text-transparent">
+                        SKIDS Advanced
+                    </span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#" class="text-gray-700 hover:text-brain-600 transition-colors font-medium">Home</a>
+                    <a href="#dashboard" class="text-gray-700 hover:text-brain-600 transition-colors font-medium">Dashboard</a>
+                    <a href="#testing" class="text-gray-700 hover:text-brain-600 transition-colors font-medium">Health Testing</a>
+                    <a href="#behavioral" class="text-gray-700 hover:text-brain-600 transition-colors font-medium">Behavioral Assessment</a>
+                </div>
+                <div class="flex items-center space-x-2 bg-brain-50 hover:bg-brain-100 px-3 py-2 rounded-full transition-colors cursor-pointer">
+                    <div class="w-8 h-8 bg-gradient-to-r from-brain-500 to-cardiovascular-500 rounded-full flex items-center justify-center">
+                        <span class="text-white text-sm">👩‍⚕️</span>
+                    </div>
+                    <span class="hidden sm:block text-sm font-medium text-gray-700">Dr. Sarah</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative pt-24 pb-20 px-4 overflow-hidden">
+        <!-- Background Elements -->
+        <div class="absolute top-20 left-10 w-72 h-72 bg-brain-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-float"></div>
+        <div class="absolute top-40 right-10 w-72 h-72 bg-cardiovascular-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-float-delay"></div>
+        <div class="absolute bottom-20 left-1/2 w-72 h-72 bg-respiratory-200 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-float-delay-2"></div>
+
+        <div class="relative max-w-7xl mx-auto text-center">
+            <!-- Badge -->
+            <div class="inline-flex items-center space-x-2 bg-white/80 backdrop-blur-sm border border-brain-200 rounded-full px-6 py-3 mb-8">
+                <span class="text-2xl">✨</span>
+                <span class="text-brain-700 font-medium">Kurzgesagt-Inspired Health Visualizations</span>
+            </div>
+
+            <!-- Main Heading -->
+            <h1 class="text-5xl md:text-7xl font-display font-bold text-gray-900 mb-6 leading-tight">
+                Every Child's<br>
+                <span class="bg-gradient-to-r from-brain-600 via-cardiovascular-500 to-respiratory-500 bg-clip-text text-transparent">
+                    Health Journey
+                </span><br>
+                Visualized
+            </h1>
+
+            <!-- Subtitle -->
+            <p class="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
+                Comprehensive child development platform featuring organ-specific testing, 
+                behavioral assessments, and engaging scientific storytelling that makes 
+                health monitoring both educational and delightful.
+            </p>
+
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
+                <button onclick="scrollToBodyMap()" class="bg-gradient-to-r from-brain-500 to-cardiovascular-500 text-white px-8 py-4 rounded-full font-semibold text-lg hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center space-x-2">
+                    <span>Explore Interactive Body Map</span>
+                    <span>→</span>
+                </button>
+                <button class="flex items-center space-x-3 text-gray-700 hover:text-brain-600 transition-colors">
+                    <div class="w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center hover:shadow-xl transition-shadow">
+                        <span class="text-xl">▶️</span>
+                    </div>
+                    <span class="font-medium">Watch Demo</span>
+                </button>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                <div class="text-center">
+                    <div class="text-3xl md:text-4xl font-bold text-brain-600 mb-2">10,000+</div>
+                    <div class="text-gray-600">Children Monitored</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl md:text-4xl font-bold text-cardiovascular-600 mb-2">95%</div>
+                    <div class="text-gray-600">Parent Satisfaction</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl md:text-4xl font-bold text-respiratory-600 mb-2">24/7</div>
+                    <div class="text-gray-600">AI Health Assistant</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Body Map Section -->
+    <section id="body-map" class="py-20 px-4 bg-gradient-to-b from-white to-blue-50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-display font-bold text-gray-900 mb-6">
+                    Explore Your Child's Health Journey
+                </h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Interactive body map with organ-specific testing protocols and beautiful visualizations
+                </p>
+            </div>
+
+            <!-- Body Map Container -->
+            <div class="relative w-full max-w-4xl mx-auto">
+                <div class="relative w-full h-[600px] mx-auto">
+                    <!-- Child silhouette background -->
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="relative w-64 h-96 bg-gradient-to-b from-gray-200 to-gray-300 rounded-full opacity-20"
+                             style="clip-path: ellipse(40% 50% at 50% 50%);">
+                        </div>
+                    </div>
+
+                    <!-- Organ indicators -->
+                    <!-- Brain -->
+                    <div class="absolute organ-hover cursor-pointer" style="left: 50%; top: 15%; transform: translate(-50%, -50%);" onclick="showOrganInfo('brain')">
+                        <div class="absolute inset-0 rounded-full bg-brain-200 animate-pulse opacity-30" style="width: 80px; height: 80px; margin: -10px;"></div>
+                        <div class="relative w-16 h-16 rounded-full bg-gradient-to-br from-brain-400 to-brain-600 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center">
+                            <span class="text-2xl">🧠</span>
+                        </div>
+                        <div class="absolute -top-8 -right-2 text-2xl animate-float">🧠</div>
+                    </div>
+
+                    <!-- Eyes -->
+                    <div class="absolute organ-hover cursor-pointer" style="left: 45%; top: 25%; transform: translate(-50%, -50%);" onclick="showOrganInfo('eyes')">
+                        <div class="absolute inset-0 rounded-full bg-sensory-200 animate-pulse opacity-30" style="width: 80px; height: 80px; margin: -10px;"></div>
+                        <div class="relative w-16 h-16 rounded-full bg-gradient-to-br from-sensory-400 to-sensory-600 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center">
+                            <span class="text-2xl">👁️</span>
+                        </div>
+                        <div class="absolute -top-8 -right-2 text-2xl animate-float-delay">👁️</div>
+                    </div>
+
+                    <!-- Ears -->
+                    <div class="absolute organ-hover cursor-pointer" style="left: 55%; top: 25%; transform: translate(-50%, -50%);" onclick="showOrganInfo('ears')">
+                        <div class="absolute inset-0 rounded-full bg-sensory-200 animate-pulse opacity-30" style="width: 80px; height: 80px; margin: -10px;"></div>
+                        <div class="relative w-16 h-16 rounded-full bg-gradient-to-br from-sensory-400 to-sensory-600 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center">
+                            <span class="text-2xl">👂</span>
+                        </div>
+                        <div class="absolute -top-8 -right-2 text-2xl animate-float-delay-2">👂</div>
+                    </div>
+
+                    <!-- Heart -->
+                    <div class="absolute organ-hover cursor-pointer" style="left: 45%; top: 40%; transform: translate(-50%, -50%);" onclick="showOrganInfo('heart')">
+                        <div class="absolute inset-0 rounded-full bg-cardiovascular-200 animate-pulse opacity-30" style="width: 80px; height: 80px; margin: -10px;"></div>
+                        <div class="relative w-16 h-16 rounded-full bg-gradient-to-br from-cardiovascular-400 to-cardiovascular-600 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center">
+                            <span class="text-2xl">❤️</span>
+                        </div>
+                        <div class="absolute -top-8 -right-2 text-2xl animate-float">❤️</div>
+                    </div>
+
+                    <!-- Lungs -->
+                    <div class="absolute organ-hover cursor-pointer" style="left: 55%; top: 40%; transform: translate(-50%, -50%);" onclick="showOrganInfo('lungs')">
+                        <div class="absolute inset-0 rounded-full bg-respiratory-200 animate-pulse opacity-30" style="width: 80px; height: 80px; margin: -10px;"></div>
+                        <div class="relative w-16 h-16 rounded-full bg-gradient-to-br from-respiratory-400 to-respiratory-600 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center">
+                            <span class="text-2xl">🫁</span>
+                        </div>
+                        <div class="absolute -top-8 -right-2 text-2xl animate-float-delay">🫁</div>
+                    </div>
+
+                    <!-- Digestive -->
+                    <div class="absolute organ-hover cursor-pointer" style="left: 50%; top: 55%; transform: translate(-50%, -50%);" onclick="showOrganInfo('digestive')">
+                        <div class="absolute inset-0 rounded-full bg-digestive-200 animate-pulse opacity-30" style="width: 80px; height: 80px; margin: -10px;"></div>
+                        <div class="relative w-16 h-16 rounded-full bg-gradient-to-br from-digestive-400 to-digestive-600 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center">
+                            <span class="text-2xl">🍎</span>
+                        </div>
+                        <div class="absolute -top-8 -right-2 text-2xl animate-float-delay-2">🍎</div>
+                    </div>
+
+                    <!-- Temperature -->
+                    <div class="absolute organ-hover cursor-pointer" style="left: 50%; top: 70%; transform: translate(-50%, -50%);" onclick="showOrganInfo('temperature')">
+                        <div class="absolute inset-0 rounded-full bg-red-200 animate-pulse opacity-30" style="width: 80px; height: 80px; margin: -10px;"></div>
+                        <div class="relative w-16 h-16 rounded-full bg-gradient-to-br from-red-400 to-red-600 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center">
+                            <span class="text-2xl">🌡️</span>
+                        </div>
+                        <div class="absolute -top-8 -right-2 text-2xl animate-float">🌡️</div>
+                    </div>
+
+                    <!-- Behavioral -->
+                    <div class="absolute organ-hover cursor-pointer" style="left: 50%; top: 85%; transform: translate(-50%, -50%);" onclick="showOrganInfo('behavioral')">
+                        <div class="absolute inset-0 rounded-full bg-brain-200 animate-pulse opacity-30" style="width: 80px; height: 80px; margin: -10px;"></div>
+                        <div class="relative w-16 h-16 rounded-full bg-gradient-to-br from-brain-400 to-brain-600 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center">
+                            <span class="text-2xl">😊</span>
+                        </div>
+                        <div class="absolute -top-8 -right-2 text-2xl animate-float-delay">😊</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>

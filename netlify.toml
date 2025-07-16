@@ -1,0 +1,45 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NEXT_PUBLIC_APP_URL = "https://skids-advanced.netlify.app"
+  NEXT_PUBLIC_DEPLOYMENT_ENV = "production"
+  NEXT_PUBLIC_TESTING_MODE = "false"
+  NEXT_PUBLIC_MOCK_DATA = "true"
+  NODE_ENV = "production"
+
+[[redirects]]
+  from = "/admin"
+  to = "/provider"
+  status = 302
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[context.production]
+  environment = { NODE_ENV = "production" }
+
+[context.deploy-preview]
+  environment = { NODE_ENV = "production" }
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-XSS-Protection = "1; mode=block"
+
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    Service-Worker-Allowed = "/"
+
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
