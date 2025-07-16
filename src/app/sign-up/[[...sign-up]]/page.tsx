@@ -12,7 +12,7 @@ export default function SignUpPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'PARENT' as UserRole
+    role: 'parent' as UserRole
   })
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
