@@ -1,4 +1,4 @@
-# SKIDS Advanced - Enterprise Integration Infrastructure
+# SKIDS Advanced Enterprise Integration Infrastructure
 ## Comprehensive Child Development Platform with Advanced Vendor Management
 
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
