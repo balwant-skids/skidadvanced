@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { Menu, X, Heart, User, Settings, LogOut } from 'lucide-react'
+import { Menu, X, Heart } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useUser } from '@/hooks/useUser'
 
@@ -49,9 +49,9 @@ function MockSignInButton({ children }: { children: React.ReactNode }) {
 
 export function Navigation() {
   const { data: session } = useSession()
-  const { logoutUser } = useUser()
-  const isSignedIn = !!session
-  const [isOpen, setIsOpen] = useState(false)
+  const isSignedIn = !!session;
+  const [isOpen, setIsOpen] = useState(false);
+
 
   // Check if Clerk is configured
   const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
@@ -102,31 +102,13 @@ export function Navigation() {
                 {item.label}
               </Link>
             ))}
+            {isSignedIn && <Link href="/dashboard" className="hidden sm:block font-medium text-gray-700 hover:text-brain-600 transition-colors">Dashboard</Link>}
+            {isSignedIn && <MockUserButton />}
+            {!isSignedIn && <Link href="/sign-up" className="hidden sm:block text-sm font-medium text-gray-700 hover:text-brain-600 transition-colors">Get Started</Link>}
           </div>
 
           {/* User Menu & Mobile Toggle */}
-          <div className="flex items-center space-x-4">
-            {/* Authentication */}
-            {isSignedIn ? (
-              <div className="flex items-center space-x-3">
-                <Link
-                  href="/dashboard"
-                  className="hidden sm:block text-sm font-medium text-gray-700 hover:text-brain-600 transition-colors"
-                >
-                  Dashboard
-                </Link>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-3">
-                <Link
-                  href="/sign-up"
-                  className="bg-gradient-to-r from-brain-500 to-cardiovascular-500 text-white px-4 py-2 rounded-full font-medium hover:shadow-lg transition-all"
-                >
-                  Get Started
-                </Link>
-              </div>
-            )}
-            
+          <div className="flex items-center space-x-9 border ml-4">            
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setIsOpen(!isOpen)}
