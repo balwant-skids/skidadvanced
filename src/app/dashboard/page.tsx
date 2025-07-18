@@ -252,9 +252,8 @@ export default function Dashboard() {
     )
   }
 
-  const userRole = user?.role as string;
-  const isProvider = userRole === 'provider'
-  const isParent = userRole === 'parent' || !userRole 
+  const isProvider = user?.role === 'provider' || user?.role === 'admin';
+  const isParent = user?.role === 'parent';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
