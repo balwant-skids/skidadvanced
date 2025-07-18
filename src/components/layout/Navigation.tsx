@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { Menu, X, Heart, User, Settings, LogOut } from 'lucide-react'
-import { useUser } from '@/hooks/useAuth'
+import { useSession } from 'next-auth/react'
+import { useUser } from '@/hooks/useUser'
 
 // Mock components for development
 function MockUserButton() {
   const [isOpen, setIsOpen] = useState(false)
+  const { logoutUser } = useUser();
 
   return (
     <div className="relative">
@@ -28,8 +30,8 @@ function MockUserButton() {
             Profile
           </Link>
           <hr className="my-1" />
-          <button className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-            Sign Out (Mock)
+          <button onClick={logoutUser} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            Sign Out
           </button>
         </div>
       )}
@@ -46,7 +48,9 @@ function MockSignInButton({ children }: { children: React.ReactNode }) {
 }
 
 export function Navigation() {
-  const { user, isSignedIn } = useUser()
+  const { data: session } = useSession()
+  const { logoutUser } = useUser()
+  const isSignedIn = !!session
   const [isOpen, setIsOpen] = useState(false)
 
   // Check if Clerk is configured
@@ -69,6 +73,7 @@ export function Navigation() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
+
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <div className="relative">
@@ -110,23 +115,9 @@ export function Navigation() {
                 >
                   Dashboard
                 </Link>
-                {isClerkConfigured ? (
-                  <div>Clerk UserButton would be here</div>
-                ) : (
-                  <MockUserButton />
-                )}
               </div>
             ) : (
               <div className="flex items-center space-x-3">
-                {isClerkConfigured ? (
-                  <div>Clerk SignInButton would be here</div>
-                ) : (
-                  <MockSignInButton>
-                    <button className="text-gray-700 hover:text-brain-600 transition-colors font-medium">
-                      Sign In (Mock)
-                    </button>
-                  </MockSignInButton>
-                )}
                 <Link
                   href="/sign-up"
                   className="bg-gradient-to-r from-brain-500 to-cardiovascular-500 text-white px-4 py-2 rounded-full font-medium hover:shadow-lg transition-all"
@@ -135,7 +126,7 @@ export function Navigation() {
                 </Link>
               </div>
             )}
-
+            
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setIsOpen(!isOpen)}

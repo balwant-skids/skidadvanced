@@ -49,9 +49,6 @@ export default function SignInPage() {
                 placeholder="Enter your email"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Demo: Use any email (try "provider@demo.com" for provider role)
-              </p>
             </div>
 
             <div>
@@ -76,9 +73,6 @@ export default function SignInPage() {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Demo: Any password works
-              </p>
             </div>
 
             <button

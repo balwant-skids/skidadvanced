@@ -12,7 +12,7 @@ export default function SignUpPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'parent' as UserRole
+    role: 'PARENT' as UserRole
   })
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -28,10 +28,9 @@ export default function SignUpPage() {
       return
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
-    const res = await registerUser(formData.email, formData.password, formData.name, formData.role);
-    console.log(res);
+    await registerUser(formData.email, formData.password, formData.name, 'parent');
 
     setIsLoading(false);
     router.push('/sign-in');
@@ -54,39 +53,6 @@ export default function SignUpPage() {
 
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Role Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                I am a:
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, role: 'parent' }))}
-                  className={`p-4 border-2 rounded-lg transition-all ${
-                    formData.role === 'parent'
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <User className="w-6 h-6 mx-auto mb-2" />
-                  <div className="text-sm font-medium">Parent</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFormData(prev => ({ ...prev, role: 'provider' }))}
-                  className={`p-4 border-2 rounded-lg transition-all ${
-                    formData.role === 'provider'
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <Stethoscope className="w-6 h-6 mx-auto mb-2" />
-                  <div className="text-sm font-medium">Provider</div>
-                </button>
-              </div>
-            </div>
-
             {/* Name */}
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
