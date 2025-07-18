@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { User, Mail, Phone, MapPin, Calendar, Edit3, Save, X, Shield, Award, Clock } from 'lucide-react'
 import { Navigation } from '@/components/layout/Navigation'
 import { DrSkidsChat } from '@/components/chat/DrSkidsChat'
-import { useUser, useRole } from '@/hooks/useAuth'
+import { useRole } from '@/hooks/useAuth'
+import { useUserContext } from '@/contexts/UserContext'
 
 export default function ProfilePage() {
-  const { user } = useUser()
+  const { userDetails: user } = useUserContext();
   const { role, isProvider, isAdmin, isParent } = useRole()
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({

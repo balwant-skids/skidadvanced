@@ -1,11 +1,11 @@
 'use client'
 
-import { useUser } from '@/hooks/useUser';
+import { useUserContext } from '@/contexts/UserContext';
 import { ArrowRight, Play, Sparkles, Microscope, Heart, Brain, MessageCircle, Shield } from 'lucide-react'
 import Link from 'next/link'
 
 export default function HomePage() {
-  const { isAuthenticated } = useUser();
+  const { isAuthenticated } = useUserContext();
 
   return (
     <main className="min-h-screen">

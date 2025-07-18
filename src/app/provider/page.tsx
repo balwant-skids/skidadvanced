@@ -26,6 +26,7 @@ import {
 import { useUser } from '@/hooks/useAuth'
 import Link from 'next/link'
 import { Navigation } from '@/components/layout/Navigation'
+import { useUserContext } from '@/contexts/UserContext'
 
 interface ProviderStats {
   totalFamilies: number
@@ -70,7 +71,7 @@ interface ParentIssue {
 }
 
 export default function ProviderDashboard() {
-  const { user, isLoaded } = useUser()
+  const { userDetails: user, isLoading } = useUserContext()
   const [activeTab, setActiveTab] = useState<'overview' | 'plans' | 'campaigns' | 'issues' | 'analytics'>('overview')
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
   const [showPlanCustomizer, setShowPlanCustomizer] = useState(false)
@@ -87,9 +88,9 @@ export default function ProviderDashboard() {
   }
 
   // Check if user has provider role
-  const isProvider = user?.publicMetadata?.role === 'provider'
+  const isProvider = user?.role === 'provider'
 
-  if (!isLoaded) {
+  if (!isLoading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>
   }
 

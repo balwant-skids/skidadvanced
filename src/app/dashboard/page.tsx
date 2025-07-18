@@ -31,6 +31,7 @@ import {
 import Link from 'next/link'
 import { Navigation } from '@/components/layout/Navigation'
 import { useUser } from '@/hooks/useUser'
+import { useUserContext } from '@/contexts/UserContext'
 
 // Enhanced child data structure for PWA
 interface ChildData {
@@ -169,7 +170,7 @@ const mockProviderStats = {
 }
 
 export default function Dashboard() {
-  const { user, isAuthenticated, isLoading } = useUser();
+  const { userDetails, isAuthenticated, isLoading } = useUserContext();
   const [isOnline, setIsOnline] = useState(true)
   const [installPrompt, setInstallPrompt] = useState<any>(null)
   const [showInstallBanner, setShowInstallBanner] = useState(false)
@@ -252,8 +253,8 @@ export default function Dashboard() {
     )
   }
 
-  const isProvider = user?.role === 'provider' || user?.role === 'admin';
-  const isParent = user?.role === 'parent';
+  const isProvider = userDetails?.role === 'provider' || userDetails?.role === 'admin';
+  const isParent = userDetails?.role === 'parent';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -268,7 +269,7 @@ export default function Dashboard() {
             className="mb-8"
           >
             <h1 className="text-4xl font-display font-bold text-gray-900 mb-2 mt-8">
-              Welcome, {user?.name || 'User'}!
+              Welcome, {userDetails?.name || 'User'}!
             </h1>
             <p className="text-xl text-gray-600">
               {isProvider ? 'Manage your practice and support families' : 'Track your child\'s health and development journey'}

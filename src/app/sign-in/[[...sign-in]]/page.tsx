@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff } from 'lucide-react'
-import { useUser } from '@/hooks/useUser'
+import { useUserContext } from '@/contexts/UserContext'
 
 export default function SignInPage() {
-  const { loginUser } = useUser()
+  const { loginUser } = useUserContext()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)

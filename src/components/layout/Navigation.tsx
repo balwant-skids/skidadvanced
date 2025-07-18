@@ -4,12 +4,12 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { Menu, X, Heart } from 'lucide-react';
-import { useUser } from '@/hooks/useUser'
+import { useUserContext } from '@/contexts/UserContext'
 
 // Mock components for development
 function MockUserButton() {
   const [isOpen, setIsOpen] = useState(false)
-  const { logoutUser } = useUser();
+  const { logoutUser } = useUserContext();
 
   return (
     <div className="relative">
@@ -39,7 +39,7 @@ function MockUserButton() {
 }
 
 export function Navigation() {
-  const { user, isAuthenticated } = useUser();
+  const { userDetails, isAuthenticated } = useUserContext();
   const isSignedIn = isAuthenticated;
   const [isOpen, setIsOpen] = useState(false);
 
@@ -78,7 +78,7 @@ export function Navigation() {
 
   let navItems: { href: string; label: string }[] = [];
   
-  switch (user?.role) {
+  switch (userDetails?.role) {
     case 'parent':
       navItems = parentNavItems;
       break;

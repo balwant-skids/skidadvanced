@@ -2,6 +2,7 @@
 
 import { useUser as useClerkUser, useAuth as useClerkAuth } from '@clerk/nextjs'
 import { User, UserRole, Permission } from '@/types/auth'
+import { useUserContext } from '@/contexts/UserContext'
 
 // Enhanced mock users for different roles
 const mockUsers: Record<string, any> = {
@@ -118,8 +119,8 @@ export function useUser() {
 
 // Enhanced authentication utilities
 export function usePermissions() {
-  const { user } = useUser()
-  const userRole = user?.publicMetadata?.role as UserRole
+  const { userDetails: user } = useUserContext()
+  const userRole = user?.role as UserRole
 
   return {
     permissions: rolePermissions[userRole] || [],
@@ -138,7 +139,7 @@ export function usePermissions() {
 }
 
 export function useRole() {
-  const { user } = useUser()
+  const { userDetails: user } = useUserContext()
   const userRole = user?.publicMetadata?.role as UserRole
 
   return {

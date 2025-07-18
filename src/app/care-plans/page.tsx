@@ -29,6 +29,7 @@ import { useUser } from '@/hooks/useAuth'
 import { Navigation } from '@/components/layout/Navigation'
 import { DrSkidsChat } from '@/components/chat/DrSkidsChat'
 import { RazorpayCheckout } from '@/components/payment/RazorpayCheckout'
+import { useUserContext } from '@/contexts/UserContext'
 
 interface ScreeningTest {
   id: string
@@ -68,7 +69,7 @@ interface CarePlan {
 }
 
 export default function CarePlansPage() {
-  const { user, isSignedIn } = useUser()
+  const { userDetails, isAuthenticated } = useUserContext()
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
   const [selectedAge, setSelectedAge] = useState('all')
   const [showCalendar, setShowCalendar] = useState(false)
@@ -76,7 +77,7 @@ export default function CarePlansPage() {
   const [paymentPlan, setPaymentPlan] = useState<any>(null)
 
   const handlePlanSelection = (plan: any) => {
-    if (!isSignedIn) {
+    if (!isAuthenticated) {
       // Redirect to sign up if not authenticated
       window.location.href = '/sign-up'
       return

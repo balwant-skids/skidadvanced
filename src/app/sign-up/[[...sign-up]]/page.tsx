@@ -3,8 +3,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, User, Stethoscope } from 'lucide-react'
-import { useUser } from '@/hooks/useUser'
 import type { UserRole } from '@/types/user'
+import { useUserContext } from '@/contexts/UserContext'
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({
@@ -18,7 +18,7 @@ export default function SignUpPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { registerUser } = useUser();
+  const { registerUser } = useUserContext();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
