@@ -3,8 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
-import { Menu, X, Heart } from 'lucide-react'
-import { useSession } from 'next-auth/react'
+import { Menu, X, Heart } from 'lucide-react';
 import { useUser } from '@/hooks/useUser'
 
 // Mock components for development
@@ -39,25 +38,12 @@ function MockUserButton() {
   )
 }
 
-function MockSignInButton({ children }: { children: React.ReactNode }) {
-  return (
-    <button onClick={() => alert('Mock Sign In - Clerk not configured')}>
-      {children}
-    </button>
-  )
-}
-
 export function Navigation() {
-  const { data: session } = useSession()
-  const isSignedIn = !!session;
+  const { user, isAuthenticated } = useUser();
+  const isSignedIn = isAuthenticated;
   const [isOpen, setIsOpen] = useState(false);
 
-
-  // Check if Clerk is configured
-  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-  const isClerkConfigured = publishableKey && !publishableKey.includes('your_') && !publishableKey.includes('_here')
-
-  const navItems = [
+  const adminNavItems = [
     { href: '/', label: 'Home' },
     { href: '/discovery', label: 'Discovery' },
     { href: '/interventions', label: 'Interventions' },
@@ -67,7 +53,42 @@ export function Navigation() {
     { href: '/provider', label: 'Provider Center' },
     { href: '/campaigns', label: 'Campaigns' },
     { href: '/admin/analytics', label: 'Analytics' },
-  ]
+  ];
+
+  const parentNavItems = [
+    { href: '/', label: 'Home' },
+    { href: '/discovery', label: 'Discovery' },
+    { href: '/interventions', label: 'Interventions' },
+    { href: '/specialists', label: 'Our Specialists' },
+    { href: '/care-plans', label: 'Care Plans' },
+    { href: '/behavioral', label: 'Behavioral Assessment' },
+  ];
+
+  const providerNavItems = [
+    { href: '/', label: 'Home' },
+    { href: '/discovery', label: 'Discovery' },
+    { href: '/interventions', label: 'Interventions' },
+    { href: '/specialists', label: 'Our Specialists' },
+    { href: '/care-plans', label: 'Care Plans' },
+    { href: '/behavioral', label: 'Behavioral Assessment' },
+    { href: '/provider', label: 'Provider Center' },
+    { href: '/campaigns', label: 'Campaigns' },
+    { href: '/admin/analytics', label: 'Analytics' },
+  ];
+
+  let navItems: { href: string; label: string }[] = [];
+  
+  switch (user?.role) {
+    case 'parent':
+      navItems = parentNavItems;
+      break;
+    case 'provider':
+      navItems = providerNavItems;
+      break;
+    case 'admin':
+      navItems = adminNavItems;
+      break;
+  }
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200">

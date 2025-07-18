@@ -1,9 +1,12 @@
 'use client'
 
+import { useUser } from '@/hooks/useUser';
 import { ArrowRight, Play, Sparkles, Microscope, Heart, Brain, MessageCircle, Shield } from 'lucide-react'
 import Link from 'next/link'
 
 export default function HomePage() {
+  const { isAuthenticated } = useUser();
+
   return (
     <main className="min-h-screen">
       {/* Simple Navigation */}
@@ -20,10 +23,9 @@ export default function HomePage() {
               <Link href="/discovery" className="text-gray-700 hover:text-purple-600 transition-colors font-medium">Discovery</Link>
               <Link href="/interventions" className="text-gray-700 hover:text-purple-600 transition-colors font-medium">Interventions</Link>
               <Link href="/specialists" className="text-gray-700 hover:text-purple-600 transition-colors font-medium">Specialists</Link>
-              <Link href="/admin/analytics" className="text-gray-700 hover:text-purple-600 transition-colors font-medium">Analytics</Link>
-              <Link href="/sign-in" className="text-gray-700 hover:text-purple-600 transition-colors font-medium">
+              {!isAuthenticated && <Link href="/sign-in" className="text-gray-700 hover:text-purple-600 transition-colors font-medium">
                 <button className="bg-purple-600 text-white px-4 py-2 rounded-md">Get Started</button>
-              </Link>
+              </Link>}
             </div>
           </div>
         </div>

@@ -12,6 +12,7 @@ export const config = {
     '/interventions', '/interventions/(.*)',
     '/specialists', '/specialists/(.*)',
     '/dashboard', '/dashboard/(.*)',
-    '/admin', '/admin/(.*)'
+    '/admin', '/admin/(.*)',
+    '/provider', '/provider/(.*)'
   ],
 }

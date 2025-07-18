@@ -1,6 +1,5 @@
 'use client'
 
-import { useUser } from '@/hooks/useAuth'
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -31,6 +30,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { Navigation } from '@/components/layout/Navigation'
+import { useUser } from '@/hooks/useUser'
 
 // Enhanced child data structure for PWA
 interface ChildData {
@@ -169,7 +169,7 @@ const mockProviderStats = {
 }
 
 export default function Dashboard() {
-  const { user, isLoaded } = useUser()
+  const { user, isAuthenticated, isLoading } = useUser();
   const [isOnline, setIsOnline] = useState(true)
   const [installPrompt, setInstallPrompt] = useState<any>(null)
   const [showInstallBanner, setShowInstallBanner] = useState(false)
@@ -224,7 +224,7 @@ export default function Dashboard() {
     }
   }
 
-  if (!isLoaded) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="text-center">
@@ -235,7 +235,7 @@ export default function Dashboard() {
     )
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="text-center">
@@ -252,9 +252,9 @@ export default function Dashboard() {
     )
   }
 
-  const userRole = user.publicMetadata?.role as string
+  const userRole = user?.role as string;
   const isProvider = userRole === 'provider'
-  const isParent = userRole === 'parent' || !userRole // Default to parent if no role set
+  const isParent = userRole === 'parent' || !userRole 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -268,8 +268,8 @@ export default function Dashboard() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <h1 className="text-4xl font-display font-bold text-gray-900 mb-2">
-              Welcome back, {user.firstName || 'User'}!
+            <h1 className="text-4xl font-display font-bold text-gray-900 mb-2 mt-8">
+              Welcome, {user?.name || 'User'}!
             </h1>
             <p className="text-xl text-gray-600">
               {isProvider ? 'Manage your practice and support families' : 'Track your child\'s health and development journey'}
