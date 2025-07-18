@@ -13,6 +13,7 @@ export const config = {
     '/specialists', '/specialists/(.*)',
     '/dashboard', '/dashboard/(.*)',
     '/admin', '/admin/(.*)',
-    '/provider', '/provider/(.*)'
+    '/provider', '/provider/(.*)',
+    '/care-plans', '/care-plans/(.*)'
   ],
 }
