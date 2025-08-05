@@ -89,21 +89,7 @@ export default function ProviderDashboard() {
 
   // Check if user has provider role
   const isProvider = user?.role === 'provider'
-
-  if (!isLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
-  }
-
-  if (!isProvider) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
-          <p className="text-gray-600">You need provider access to view this page.</p>
-        </div>
-      </div>
-    )
-  }
+  const isAdmin = user?.role === 'admin'
 
   const [carePlans, setCarePlans] = useState<CarePlan[]>([
     {
@@ -255,22 +241,37 @@ export default function ProviderDashboard() {
     }
   }
 
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>
+  }
+
+  if (!isProvider && !isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Access Denied</h1>
+          <p className="text-gray-600">You need provider access to view this page.</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Navigation />
-      
+
       <main className="pt-20 pb-8 px-4">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-4xl font-display font-bold text-gray-900 mb-2"
             >
               Provider Command Center
             </motion.h1>
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
