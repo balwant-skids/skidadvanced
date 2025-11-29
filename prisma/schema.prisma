@@ -1,31 +1,294 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// SKIDS Advanced - Multi-Tenant Prisma Schema
+// Database: Turso (libSQL/SQLite)
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
-enum UserRole {
-  parent
-  provider
-  admin
-}
+// ============ CORE MODELS ============
 
 model User {
-  id    String @id @default(cuid())
-  email String @unique
-  name  String
-  hashedPassword String
-  role UserRole @default(parent)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String    @id @default(cuid())
+  clerkId            String    @unique
+  email              String    @unique
+  name               String
+  phone              String?
+  role               String    @default("parent") // super_admin, clinic_manager, parent
+  clinicId           String?   // Direct clinic reference for easier queries
+  fcmToken           String?
+  fcmTokenUpdatedAt  DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // Relations
+  clinic          Clinic?   @relation("ClinicUsers", fields: [clinicId], references: [id])
+  managedClinic   Clinic?   @relation("ClinicManager")
+  parentProfile   ParentProfile?
+  sentMessages    Message[] @relation("SentMessages")
+  uploadedReports Report[]  @relation("UploadedReports")
+  subscription    Subscription?
+
+  @@index([clerkId])
+  @@index([email])
+  @@index([clinicId])
 }
 
+model Clinic {
+  id             String    @id @default(cuid())
+  name           String
+  code           String    @unique
+  address        String?
+  phone          String?
+  email          String?
+  whatsappNumber String?
+  isActive       Boolean   @default(true)
+  settings       String    @default("{}") // JSON stored as string
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  manager        User?     @relation("ClinicManager", fields: [managerId], references: [id])
+  managerId      String?   @unique
+  users          User[]    @relation("ClinicUsers")
+  whitelist      ParentWhitelist[]
+  parents        ParentProfile[]
+  carePlans      CarePlan[]
+  campaigns      Campaign[]
+  messages       Message[]
+
+  @@index([code])
+  @@index([isActive])
+}
+
+model ParentWhitelist {
+  id           String   @id @default(cuid())
+  email        String
+  phone        String?
+  name         String?
+  isRegistered Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  clinic       Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  clinicId     String
+
+  @@unique([clinicId, email])
+  @@index([email])
+}
+
+model ParentProfile {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @unique
+
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
+  clinicId  String
+
+  children  Child[]
+
+  @@index([clinicId])
+}
+
+model Child {
+  id            String   @id @default(cuid())
+  name          String
+  dateOfBirth   DateTime
+  gender        String?
+  bloodGroup    String?
+  allergies     String?
+  healthMetrics String   @default("{}") // JSON stored as string
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  parent       ParentProfile @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  parentId     String
+
+  assessments  Assessment[]
+  appointments Appointment[]
+  reports      Report[]
+
+  @@index([parentId])
+}
+
+
+// ============ SUBSCRIPTION MODELS ============
+
+model CarePlan {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  price        Int      // in paise (INR)
+  billingCycle String   @default("monthly")
+  features     String   @default("[]") // JSON stored as string
+  isActive     Boolean  @default(true)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Clinic-specific plan (null = global)
+  clinic       Clinic?  @relation(fields: [clinicId], references: [id])
+  clinicId     String?
+
+  subscriptions Subscription[]
+
+  @@index([clinicId])
+  @@index([isActive])
+}
+
+model Subscription {
+  id         String   @id @default(cuid())
+  status     String   @default("active") // active, paused, cancelled, expired
+  startDate  DateTime @default(now())
+  endDate    DateTime?
+  razorpayId String?  @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String   @unique
+
+  carePlan   CarePlan @relation(fields: [carePlanId], references: [id])
+  carePlanId String
+
+  @@index([status])
+  @@index([endDate])
+}
+
+// ============ HEALTH MODELS ============
+
+model Assessment {
+  id              String   @id @default(cuid())
+  type            String   // developmental, behavioral, cognitive
+  category        String?  // brain, heart, lungs
+  results         String   // JSON stored as string
+  score           Int?
+  recommendations String   @default("[]") // JSON stored as string
+  completedAt     DateTime @default(now())
+  notes           String?
+
+  child           Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  childId         String
+
+  @@index([childId])
+  @@index([type])
+  @@index([completedAt])
+}
+
+model Appointment {
+  id           String   @id @default(cuid())
+  type         String   // consultation, follow-up, assessment
+  title        String?
+  description  String?
+  scheduledAt  DateTime
+  duration     Int      @default(30) // minutes
+  status       String   @default("scheduled") // scheduled, confirmed, completed, cancelled
+  notes        String?
+  reminderSent Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  child        Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  childId      String
+
+  @@index([childId])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+model Report {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  reportType   String   @default("GENERAL") // GENERAL, LAB, ASSESSMENT, PRESCRIPTION
+  fileUrl      String
+  fileType     String   // MIME type
+  fileSize     Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  child        Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  childId      String
+
+  uploadedBy   User?    @relation("UploadedReports", fields: [uploadedById], references: [id])
+  uploadedById String?
+
+  @@index([childId])
+  @@index([createdAt])
+  @@index([reportType])
+}
+
+// ============ ENGAGEMENT MODELS ============
+
+model Campaign {
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+  content        String   @default("{}") // JSON stored as string
+  mediaUrl       String?
+  mediaType      String?  // image, video, pdf
+  targetAudience String   @default("all") // all, clinic, plan
+  targetIds      String   @default("[]") // JSON array stored as string
+  ctaText        String?
+  ctaUrl         String?
+  status         String   @default("draft") // draft, active, completed, archived
+  startDate      DateTime?
+  endDate        DateTime?
+  viewCount      Int      @default(0)
+  clickCount     Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  clinic         Clinic?  @relation(fields: [clinicId], references: [id])
+  clinicId       String?
+
+  @@index([status])
+  @@index([clinicId])
+  @@index([startDate])
+  @@index([endDate])
+}
+
+model Message {
+  id           String   @id @default(cuid())
+  content      String
+  isFromParent Boolean
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  sender       User     @relation("SentMessages", fields: [senderId], references: [id])
+  senderId     String
+
+  clinic       Clinic   @relation(fields: [clinicId], references: [id])
+  clinicId     String
+
+  childId      String?
+
+  @@index([senderId])
+  @@index([clinicId])
+  @@index([createdAt])
+  @@index([isRead])
+}
+
+// ============ SYNC & OFFLINE SUPPORT ============
+
+model SyncEvent {
+  id          String    @id @default(cuid())
+  userId      String
+  entity      String    // child, appointment, assessment
+  entityId    String
+  action      String    // create, update, delete
+  data        String    // JSON stored as string
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([processedAt])
+}

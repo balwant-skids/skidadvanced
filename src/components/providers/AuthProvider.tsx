@@ -1,8 +1,21 @@
 'use client'
 
+import { ClerkProvider } from '@clerk/nextjs'
 import { UserProvider } from '@/contexts/UserContext'
-import { SessionProvider } from 'next-auth/react'
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  return <SessionProvider><UserProvider>{children}</UserProvider></SessionProvider>
+  return (
+    <ClerkProvider
+      appearance={{
+        elements: {
+          formButtonPrimary: 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700',
+          card: 'shadow-lg',
+        },
+      }}
+    >
+      <UserProvider>
+        {children}
+      </UserProvider>
+    </ClerkProvider>
+  )
 }

@@ -1,164 +1,126 @@
 'use client'
 
+import { SignUp } from '@clerk/nextjs'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { Eye, EyeOff, User, Stethoscope } from 'lucide-react'
-import type { UserRole } from '@/types/user'
-import { useUserContext } from '@/contexts/UserContext'
 
 export default function SignUpPage() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: 'PARENT' as UserRole
-  })
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-  const { registerUser } = useUserContext();
+  const [clinicCode, setClinicCode] = useState('')
+  const [codeVerified, setCodeVerified] = useState(false)
+  const [codeError, setCodeError] = useState('')
+  const [isVerifying, setIsVerifying] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match')
+  const verifyClinicCode = async () => {
+    if (!clinicCode.trim()) {
+      setCodeError('Please enter a clinic code')
       return
     }
 
-    setIsLoading(true);
+    setIsVerifying(true)
+    setCodeError('')
 
-    await registerUser(formData.email, formData.password, formData.name, 'parent');
+    try {
+      const res = await fetch(`/api/clinics/verify?code=${clinicCode}`)
+      const data = await res.json()
 
-    setIsLoading(false);
-    router.push('/sign-in');
+      if (data.valid) {
+        setCodeVerified(true)
+        // Store clinic code in sessionStorage for use after sign-up
+        sessionStorage.setItem('pendingClinicCode', clinicCode)
+      } else {
+        setCodeError(data.message || 'Invalid clinic code')
+      }
+    } catch {
+      setCodeError('Failed to verify clinic code')
+    } finally {
+      setIsVerifying(false)
+    }
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }))
+  // Show clinic code verification first
+  if (!codeVerified) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+        <div className="max-w-md w-full">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Join SKIDS Advanced</h1>
+            <p className="text-gray-600">Enter your clinic code to get started</p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+            <div className="space-y-6">
+              <div>
+                <label htmlFor="clinicCode" className="block text-sm font-medium text-gray-700 mb-2">
+                  Clinic Code
+                </label>
+                <input
+                  id="clinicCode"
+                  type="text"
+                  value={clinicCode}
+                  onChange={(e) => setClinicCode(e.target.value.toUpperCase())}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
+                  placeholder="Enter 6-digit code"
+                  maxLength={6}
+                />
+                {codeError && (
+                  <p className="mt-2 text-sm text-red-600">{codeError}</p>
+                )}
+                <p className="mt-2 text-sm text-gray-500">
+                  Your clinic should have provided you with a registration code
+                </p>
+              </div>
+
+              <button
+                onClick={verifyClinicCode}
+                disabled={isVerifying}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50"
+              >
+                {isVerifying ? 'Verifying...' : 'Continue'}
+              </button>
+            </div>
+          </div>
+
+          <div className="text-center mt-6">
+            <p className="text-sm text-gray-600">
+              Already have an account?{' '}
+              <a href="/sign-in" className="text-blue-600 hover:text-blue-700 font-medium">
+                Sign in here
+              </a>
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
+  // Show Clerk sign-up after code verification
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Join SKIDS Advanced</h1>
-          <p className="text-gray-600">Create your account to start your child's health journey</p>
+          <div className="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm mb-4">
+            ✓ Clinic code verified
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Your Account</h1>
+          <p className="text-gray-600">Complete your registration to get started</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Name */}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your full name"
-                required
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-
-            {/* Password */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
-                  placeholder="Create a password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Confirm Password */}
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type={showConfirmPassword ? 'text' : 'password'}
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12"
-                  placeholder="Confirm your password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-            
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white py-3 rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? 'Creating Account...' : 'Create Account'}
-            </button>
-
-          </form>
-        </div>
-        
-        <div className="text-center mt-6">
-          <p className="text-sm text-gray-600">
-            Already have an account?{' '}
-            <a href="/sign-in" className="text-blue-600 hover:text-blue-700 font-medium">
-              Sign in here
-            </a>
-          </p>
-        </div>
+        <SignUp
+          appearance={{
+            elements: {
+              rootBox: 'w-full',
+              card: 'bg-white rounded-2xl shadow-lg border border-gray-200 p-0',
+              headerTitle: 'hidden',
+              headerSubtitle: 'hidden',
+              socialButtonsBlockButton: 'border border-gray-300 hover:bg-gray-50',
+              formButtonPrimary: 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700',
+              footerActionLink: 'text-blue-600 hover:text-blue-700',
+            },
+          }}
+          routing="path"
+          path="/sign-up"
+          signInUrl="/sign-in"
+          forceRedirectUrl="/onboarding"
+        />
       </div>
     </div>
   )
