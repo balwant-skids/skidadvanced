@@ -1,253 +1,438 @@
-# SKIDS Advanced - Internal Deployment Checklist
+# ✅ SKIDS Advanced - Deployment Checklist
 
-**Version**: `internal-deployment-v1`  
-**Target**: Vercel Staging Environment  
-**Purpose**: Internal testing and stakeholder feedback collection  
-
----
-
-## ✅ **PRE-DEPLOYMENT CHECKLIST**
-
-### **Code Preparation**
-- [x] **Git Branch Created**: `internal-deployment-v1` branch ready
-- [x] **Feedback Widget Removed**: No in-app feedback collection system
-- [x] **Environment Variables Updated**: Manual feedback collection configured
-- [x] **Vercel Configuration**: `vercel.json` configured for staging
-- [x] **Documentation Updated**: All docs reflect manual feedback approach
-- [x] **Dependencies Verified**: All npm packages installed and working
-- [x] **Build Testing**: Local build successful (`npm run build`)
-- [x] **Local Testing**: All features functional on localhost
-
-### **Feature Validation**
-- [x] **Discovery Journeys**: All 6 journeys functional and interactive
-- [x] **Behavioral Assessments**: SKIDS Clinic Chatter and digital wellness working
-- [x] **Care Plans**: Three-tier system with educational content integration
-- [x] **Provider Dashboard**: Simplified dashboard with campaign templates
-- [x] **PWA Features**: Manifest, service worker, and offline capabilities
-- [x] **Mock Authentication**: Role-based access working without external dependencies
-- [x] **Responsive Design**: Mobile optimization across all features
-- [x] **Navigation**: All routes and links functional
-
-### **Performance Verification**
-- [x] **Load Times**: <3 seconds for major pages
-- [x] **Lighthouse Scores**: 85+ performance, 95+ accessibility
-- [x] **Cross-Browser Testing**: Chrome, Firefox, Safari compatibility
-- [x] **Mobile Testing**: iOS Safari and Android Chrome functionality
-- [x] **PWA Installation**: Install prompt working on mobile devices
-- [x] **Offline Functionality**: Basic offline features operational
+**Date Started:** _______________  
+**Deployed By:** _______________  
+**Production URL:** _______________
 
 ---
 
-## 🚀 **DEPLOYMENT STEPS**
+## 📋 PRE-DEPLOYMENT (Complete ✅)
 
-### **1. Vercel Deployment**
-```bash
-# Deploy to Vercel staging
-vercel --prod --yes
+- [x] All services configured and verified
+- [x] Local build successful
+- [x] Environment variables documented
+- [x] Verification script created
+- [x] Documentation complete
+- [x] Git repository up to date
 
-# Verify deployment URL
-# Expected: https://skids-advanced-internal.vercel.app
+**Status:** ✅ READY TO DEPLOY
+
+---
+
+## 🔧 PHASE 1: CLOUDFLARE PAGES SETUP
+
+### 1.1 Create Project
+
+- [ ] Logged into Cloudflare Dashboard (https://dash.cloudflare.com)
+- [ ] Navigated to Workers & Pages → Pages
+- [ ] Clicked "Create application"
+- [ ] Selected "Connect to Git"
+- [ ] Connected GitHub account (if needed)
+- [ ] Selected repository
+- [ ] Configured build settings:
+  - [ ] Framework preset: Next.js
+  - [ ] Build command: `npm run build`
+  - [ ] Build output directory: `.next`
+  - [ ] Root directory: `skidadvanced`
+  - [ ] Node version: 18
+- [ ] Clicked "Save and Deploy"
+
+**Notes:**
+```
+Project Name: _______________
+Initial deployment will fail - this is expected
 ```
 
-### **2. Environment Configuration**
-- [ ] **Staging URL Confirmed**: Deployment accessible at staging URL
-- [ ] **Environment Variables**: All staging variables properly set
-- [ ] **SSL Certificate**: HTTPS working correctly
-- [ ] **Custom Domain**: (Optional) Custom domain configured if needed
+---
 
-### **3. Post-Deployment Verification**
-- [ ] **Homepage Loading**: Main page loads correctly
-- [ ] **Discovery Journeys**: All journeys accessible and functional
-- [ ] **Behavioral Assessment**: Assessment flow working end-to-end
-- [ ] **Care Plans**: Plan comparison and selection functional
-- [ ] **Provider Dashboard**: Dashboard accessible and functional
-- [ ] **PWA Features**: Install prompt and offline features working
-- [ ] **Mobile Experience**: Full functionality on mobile devices
-- [ ] **Performance**: Load times and responsiveness acceptable
+### 1.2 Add Environment Variables
+
+**Location:** Settings → Environment variables
+
+#### Database (1/25)
+- [ ] `DATABASE_URL`
+
+#### Authentication (6/25)
+- [ ] `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
+- [ ] `CLERK_SECRET_KEY`
+- [ ] `NEXT_PUBLIC_CLERK_SIGN_IN_URL`
+- [ ] `NEXT_PUBLIC_CLERK_SIGN_UP_URL`
+- [ ] `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`
+- [ ] `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`
+
+#### Firebase (7/25)
+- [ ] `NEXT_PUBLIC_FIREBASE_API_KEY`
+- [ ] `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+- [ ] `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+- [ ] `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+- [ ] `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+- [ ] `NEXT_PUBLIC_FIREBASE_APP_ID`
+- [ ] `FIREBASE_SERVICE_ACCOUNT_KEY` ⚠️ SINGLE LINE!
+
+#### R2 Storage (6/25)
+- [ ] `CLOUDFLARE_R2_ENDPOINT`
+- [ ] `CLOUDFLARE_R2_BUCKET`
+- [ ] `CLOUDFLARE_R2_ACCESS_KEY_ID`
+- [ ] `CLOUDFLARE_R2_SECRET_ACCESS_KEY`
+- [ ] `CLOUDFLARE_ACCOUNT_ID`
+- [ ] `NEXT_PUBLIC_R2_PUBLIC_URL`
+
+#### Application Settings (5/25)
+- [ ] `NODE_ENV=production`
+- [ ] `NEXT_PUBLIC_APP_NAME=SKIDS Advanced`
+- [ ] `NEXT_PUBLIC_ENABLE_OFFLINE_MODE=true`
+- [ ] `NEXT_PUBLIC_ENABLE_PUSH_NOTIFICATIONS=true`
+- [ ] `NEXT_PUBLIC_ENABLE_GOOGLE_AUTH=true`
+
+**Total Variables Added:** _____ / 25
+
+**Notes:**
+```
+All variables set for: [ ] Production [ ] Preview
+Firebase service account verified as single line: [ ] Yes
+All variables saved: [ ] Yes
+```
 
 ---
 
-## 📋 **TESTING PREPARATION**
+## 🚀 PHASE 2: DEPLOYMENT
 
-### **Access Setup**
-- [ ] **Staging URL Shared**: Internal team has access to staging environment
-- [ ] **Access Code Distributed**: `SKIDS2024` shared with authorized testers
-- [ ] **Testing Accounts**: Demo parent and provider accounts documented
-- [ ] **Device Access**: Testing devices prepared (desktop, mobile, tablet)
+### 2.1 Choose Deployment Method
 
-### **Documentation Distribution**
-- [ ] **Testing Guidelines**: Shared with all participants
-- [ ] **Observation Templates**: Printed and prepared for sessions
-- [ ] **Session Schedules**: Testing sessions scheduled with participants
-- [ ] **Feedback Procedures**: Manual collection methods communicated
+**Method Selected:** [ ] Git Push [ ] Wrangler CLI
 
-### **Session Materials**
-- [ ] **Observation Forms**: Printed templates for note-taking
-- [ ] **Task Scenarios**: Specific testing scenarios prepared
-- [ ] **Recording Equipment**: (Optional) Screen recording setup ready
-- [ ] **Feedback Forms**: Post-session feedback forms prepared
+#### Option A: Git Push
+```bash
+cd skidadvanced
+git add .
+git commit -m "chore: production deployment"
+git push origin main
+```
 
----
+- [ ] Commands executed
+- [ ] Push successful
+- [ ] Cloudflare detected push
 
-## 👥 **STAKEHOLDER COMMUNICATION**
+#### Option B: Wrangler CLI
+```bash
+wrangler login
+cd skidadvanced
+wrangler pages deploy .next --project-name=skids-advanced
+```
 
-### **Internal Team Notification**
-- [ ] **Development Team**: Notified of staging deployment
-- [ ] **Design Team**: Informed of testing schedule and objectives
-- [ ] **Management**: Updated on deployment status and testing plan
-- [ ] **QA Team**: Briefed on manual testing procedures
-
-### **External Stakeholder Communication**
-- [ ] **Healthcare Professionals**: Invited to provider dashboard testing
-- [ ] **Parent Representatives**: Scheduled for parent experience testing
-- [ ] **Business Stakeholders**: Informed of testing timeline and objectives
-- [ ] **Subject Matter Experts**: Engaged for content and approach validation
-
-### **Communication Materials**
-- [ ] **Testing Invitation**: Clear invitation with objectives and timeline
-- [ ] **Access Instructions**: Step-by-step access guide for staging environment
-- [ ] **Expectation Setting**: Clear communication about platform status and goals
-- [ ] **Feedback Process**: Explanation of manual feedback collection approach
+- [ ] Wrangler installed
+- [ ] Logged in successfully
+- [ ] Deployment command executed
 
 ---
 
-## 📊 **SUCCESS CRITERIA**
+### 2.2 Monitor Deployment
 
-### **Technical Criteria**
-- [ ] **Deployment Success**: Staging environment accessible and functional
-- [ ] **Feature Functionality**: All implemented features working correctly
-- [ ] **Performance Standards**: Load times and responsiveness meeting targets
-- [ ] **Cross-Platform Compatibility**: Consistent experience across devices
-- [ ] **PWA Capabilities**: Progressive web app features operational
+- [ ] Opened Cloudflare Pages dashboard
+- [ ] Watched build logs
+- [ ] Build started successfully
+- [ ] Build completed without errors
+- [ ] Deployment successful
 
-### **Testing Criteria**
-- [ ] **Participant Engagement**: >90% of scheduled participants complete testing
-- [ ] **Session Quality**: Comprehensive feedback collected from all sessions
-- [ ] **Issue Identification**: Clear documentation of bugs and improvements
-- [ ] **Feature Validation**: Confirmation that features meet user needs
-- [ ] **Stakeholder Satisfaction**: Positive feedback on platform direction
+**Build Time:** _____ minutes
 
-### **Business Criteria**
-- [ ] **Value Proposition Validation**: Care plans and pricing confirmed appropriate
-- [ ] **Educational Content Approval**: Content integration validated as valuable
-- [ ] **User Experience Confirmation**: Interface and flows approved by users
-- [ ] **Next Phase Approval**: Stakeholder approval to proceed with production development
+**Production URL:** _______________
 
----
+**Notes:**
+```
+Build warnings (if any):
 
-## 🔧 **TROUBLESHOOTING GUIDE**
 
-### **Common Deployment Issues**
-**Issue**: Vercel deployment fails
-- **Solution**: Check build logs, verify package.json, ensure all dependencies installed
+Build errors (if any):
 
-**Issue**: Environment variables not working
-- **Solution**: Verify Vercel environment variable configuration, check variable names
 
-**Issue**: PWA features not working
-- **Solution**: Verify service worker registration, check manifest.json, test HTTPS
-
-**Issue**: Mobile experience problems
-- **Solution**: Test on actual devices, check responsive design, verify touch interactions
-
-### **Testing Session Issues**
-**Issue**: Participant cannot access staging environment
-- **Solution**: Verify URL, check access code, ensure internet connectivity
-
-**Issue**: Features not working during testing
-- **Solution**: Refresh page, clear browser cache, try different browser
-
-**Issue**: Performance issues during testing
-- **Solution**: Check internet connection, verify staging environment status
-
-### **Feedback Collection Issues**
-**Issue**: Insufficient feedback quality
-- **Solution**: Provide clearer guidance, ask specific questions, extend session time
-
-**Issue**: Technical issues preventing testing
-- **Solution**: Have backup devices ready, prepare alternative testing scenarios
+```
 
 ---
 
-## 📈 **MONITORING & ANALYTICS**
+## ✅ PHASE 3: POST-DEPLOYMENT VERIFICATION
 
-### **Performance Monitoring**
-- [ ] **Vercel Analytics**: Enabled for staging environment
-- [ ] **Load Time Tracking**: Monitor page load performance
-- [ ] **Error Tracking**: Monitor for JavaScript errors and issues
-- [ ] **User Flow Analytics**: Track navigation patterns and feature usage
+### 3.1 Update Environment Variables
 
-### **Testing Analytics**
-- [ ] **Session Tracking**: Document all testing sessions and participants
-- [ ] **Issue Tracking**: Maintain real-time list of identified issues
-- [ ] **Feedback Compilation**: Daily compilation of feedback and insights
-- [ ] **Progress Reporting**: Regular updates to stakeholders on testing progress
+- [ ] Copied production URL
+- [ ] Updated `NEXT_PUBLIC_APP_URL` in Cloudflare
+- [ ] Saved changes
+- [ ] Triggered redeploy (if needed)
+
+**Updated URL:** _______________
 
 ---
 
-## 🎯 **POST-DEPLOYMENT ACTIONS**
+### 3.2 Update External Services
 
-### **Immediate (Day 1)**
-- [ ] **Deployment Verification**: Confirm all features working in staging
-- [ ] **Team Notification**: Inform all stakeholders of successful deployment
-- [ ] **Initial Testing**: Conduct internal team testing and validation
-- [ ] **Issue Resolution**: Address any immediate deployment issues
+#### Clerk Dashboard
+- [ ] Logged into Clerk Dashboard
+- [ ] Added production domain
+- [ ] Updated redirect URLs:
+  - [ ] Sign-in URL
+  - [ ] Sign-up URL
+  - [ ] After sign-in URL
+  - [ ] After sign-up URL
+- [ ] Saved changes
 
-### **Week 1**
-- [ ] **Internal Testing**: Complete internal team testing and feedback
-- [ ] **Documentation Updates**: Update any documentation based on deployment learnings
-- [ ] **Session Scheduling**: Finalize external stakeholder testing schedule
-- [ ] **Feedback Compilation**: Begin systematic feedback collection and analysis
-
-### **Week 2**
-- [ ] **External Testing**: Complete stakeholder and user representative testing
-- [ ] **Comprehensive Analysis**: Compile all feedback into detailed report
-- [ ] **Next Phase Planning**: Update production development plan based on insights
-- [ ] **Stakeholder Presentation**: Present findings and recommendations to leadership
+#### Firebase Console
+- [ ] Logged into Firebase Console
+- [ ] Added production domain to authorized domains
+- [ ] Verified FCM configuration
+- [ ] Saved changes
 
 ---
 
-## 📞 **SUPPORT CONTACTS**
+### 3.3 Test Critical Paths
 
-### **Technical Support**
-- **Development Team Lead**: [Contact for technical issues]
-- **DevOps/Deployment**: [Contact for deployment and infrastructure issues]
-- **QA Lead**: [Contact for testing and quality assurance]
+#### Homepage
+- [ ] Visited production URL
+- [ ] Page loads successfully
+- [ ] No console errors
+- [ ] Assets load correctly
 
-### **Project Management**
-- **Project Manager**: [Contact for timeline and coordination]
-- **Product Owner**: [Contact for feature and business questions]
-- **Stakeholder Liaison**: [Contact for external stakeholder coordination]
-
-### **Emergency Contacts**
-- **Critical Issues**: [24/7 contact for critical deployment issues]
-- **Stakeholder Escalation**: [Contact for urgent stakeholder communication]
+**Test URL:** _______________  
+**Result:** [ ] Pass [ ] Fail
 
 ---
 
-## ✅ **DEPLOYMENT COMPLETION SIGN-OFF**
+#### Authentication
+- [ ] Clicked "Sign In"
+- [ ] Sign-in page loads
+- [ ] Entered test credentials
+- [ ] Successfully signed in
+- [ ] Redirected to dashboard
 
-### **Technical Sign-Off**
-- [ ] **Development Team**: Features functional and ready for testing
-- [ ] **QA Team**: Quality standards met for internal testing phase
-- [ ] **DevOps**: Deployment successful and monitoring active
-
-### **Business Sign-Off**
-- [ ] **Product Owner**: Platform ready for stakeholder validation
-- [ ] **Project Manager**: Testing plan ready for execution
-- [ ] **Stakeholder Representative**: Approval to proceed with testing
-
-### **Final Approval**
-- [ ] **Deployment Complete**: Staging environment fully operational
-- [ ] **Testing Ready**: All materials and procedures prepared
-- [ ] **Stakeholder Communication**: All participants informed and scheduled
-- [ ] **Success Metrics**: Tracking and measurement systems in place
+**Test Account:** _______________  
+**Result:** [ ] Pass [ ] Fail
 
 ---
 
-**🚀 INTERNAL DEPLOYMENT CHECKLIST COMPLETE - READY FOR COMPREHENSIVE STAKEHOLDER TESTING**
+#### Dashboard
+- [ ] Dashboard loads
+- [ ] User data displays
+- [ ] Navigation works
+- [ ] No errors in console
 
-**Deployment URL**: `https://skids-advanced-internal.vercel.app` (to be confirmed after deployment)  
-**Access Code**: `SKIDS2024`  
-**Testing Period**: 2 weeks from deployment date  
-**Feedback Method**: Manual collection through direct observation and structured interviews
+**Result:** [ ] Pass [ ] Fail
+
+---
+
+#### Database Operations
+- [ ] Created test child profile
+- [ ] Data saved successfully
+- [ ] Data retrieved correctly
+- [ ] Updates work
+- [ ] Deletes work (if applicable)
+
+**Result:** [ ] Pass [ ] Fail
+
+---
+
+#### File Upload (R2)
+- [ ] Uploaded test file
+- [ ] File saved to R2
+- [ ] File accessible via URL
+- [ ] File displays correctly
+
+**Test File:** _______________  
+**Result:** [ ] Pass [ ] Fail
+
+---
+
+#### Push Notifications
+- [ ] Allowed notifications in browser
+- [ ] Triggered test notification
+- [ ] Notification received
+- [ ] Notification displays correctly
+
+**Result:** [ ] Pass [ ] Fail
+
+---
+
+### 3.4 Monitor Logs
+
+- [ ] Opened Cloudflare Pages logs
+- [ ] Checked for errors
+- [ ] Verified all services connected
+- [ ] No critical errors found
+
+**Monitoring Duration:** _____ minutes
+
+**Issues Found:**
+```
+
+
+```
+
+---
+
+### 3.5 Performance Check
+
+- [ ] Tested page load speed
+- [ ] Checked Lighthouse score
+- [ ] Verified mobile responsiveness
+- [ ] Tested on different browsers:
+  - [ ] Chrome
+  - [ ] Firefox
+  - [ ] Safari
+  - [ ] Edge
+
+**Lighthouse Score:** _____  
+**Load Time:** _____ seconds
+
+---
+
+## 🎯 PHASE 4: OPTIONAL ENHANCEMENTS
+
+### 4.1 Custom Domain (Optional)
+
+- [ ] Purchased/configured custom domain
+- [ ] Added domain to Cloudflare Pages
+- [ ] Configured DNS records
+- [ ] SSL certificate active
+- [ ] Domain verified
+- [ ] Updated all service URLs
+
+**Custom Domain:** _______________
+
+---
+
+### 4.2 Monitoring Setup (Optional)
+
+- [ ] Set up error tracking (Sentry)
+- [ ] Configured analytics
+- [ ] Set up uptime monitoring
+- [ ] Created alerts
+- [ ] Documented monitoring procedures
+
+---
+
+### 4.3 Documentation Updates (Optional)
+
+- [ ] Updated README with production URL
+- [ ] Documented deployment process
+- [ ] Created operational runbook
+- [ ] Trained team members
+- [ ] Updated project documentation
+
+---
+
+## 📊 DEPLOYMENT SUMMARY
+
+### Deployment Details
+
+**Deployment Date:** _______________  
+**Deployment Time:** _______________  
+**Total Time:** _____ hours  
+**Deployed By:** _______________
+
+**URLs:**
+- Production: _______________
+- Staging: _______________ (if applicable)
+- Custom Domain: _______________ (if applicable)
+
+---
+
+### Test Results
+
+| Test | Status | Notes |
+|------|--------|-------|
+| Homepage | [ ] Pass [ ] Fail | |
+| Authentication | [ ] Pass [ ] Fail | |
+| Dashboard | [ ] Pass [ ] Fail | |
+| Database | [ ] Pass [ ] Fail | |
+| File Upload | [ ] Pass [ ] Fail | |
+| Notifications | [ ] Pass [ ] Fail | |
+
+**Overall Status:** [ ] All Pass [ ] Some Failures
+
+---
+
+### Issues Encountered
+
+**Issue 1:**
+```
+Description:
+
+
+Resolution:
+
+
+```
+
+**Issue 2:**
+```
+Description:
+
+
+Resolution:
+
+
+```
+
+---
+
+### Next Steps
+
+**Immediate:**
+- [ ] Monitor logs for 24 hours
+- [ ] Fix any critical issues
+- [ ] Communicate deployment to team
+- [ ] Update documentation
+
+**Short-term:**
+- [ ] Optimize performance
+- [ ] Set up monitoring
+- [ ] Configure custom domain
+- [ ] Train team
+
+**Long-term:**
+- [ ] Complete remaining tasks
+- [ ] Add new features
+- [ ] Scale infrastructure
+- [ ] Improve UX
+
+---
+
+## ✅ DEPLOYMENT COMPLETE
+
+- [ ] All phases completed
+- [ ] All tests passing
+- [ ] No critical issues
+- [ ] Team notified
+- [ ] Documentation updated
+
+**Deployment Status:** [ ] Success [ ] Partial [ ] Failed
+
+**Sign-off:**
+
+Name: _______________  
+Date: _______________  
+Signature: _______________
+
+---
+
+## 📞 SUPPORT CONTACTS
+
+**Technical Issues:**
+- Cloudflare Support: https://support.cloudflare.com
+- Clerk Support: https://clerk.com/support
+- Firebase Support: https://firebase.google.com/support
+
+**Documentation:**
+- STEP_BY_STEP_DEPLOYMENT.md
+- TROUBLESHOOTING_GUIDE.md
+- DEPLOYMENT_RUNBOOK.md
+
+**Emergency Rollback:**
+```bash
+# Revert to previous deployment in Cloudflare dashboard
+# Or rollback git commit:
+git revert HEAD
+git push origin main
+```
+
+---
+
+**Congratulations on your deployment! 🎉**

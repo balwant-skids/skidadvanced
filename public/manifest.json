@@ -1,15 +1,14 @@
 {
-  "name": "SKIDS Advanced - Child Health Platform",
-  "short_name": "SKIDS Advanced",
-  "description": "Comprehensive child development and health monitoring platform",
-  "start_url": "/dashboard",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#3B82F6",
-  "orientation": "portrait-primary",
+  "name": "SKIDS Advanced - Child Development Platform",
+  "short_name": "SKIDS",
+  "description": "Comprehensive child health monitoring, assessments, and parenting guidance",
+  "start_url": "/",
   "scope": "/",
-  "lang": "en",
-  "categories": ["health", "medical", "education"],
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "categories": ["health", "education", "lifestyle"],
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
@@ -60,62 +59,45 @@
       "purpose": "maskable any"
     }
   ],
-  "shortcuts": [
-    {
-      "name": "Child Dashboard",
-      "short_name": "Dashboard",
-      "description": "View your child's health dashboard",
-      "url": "/dashboard",
-      "icons": [{ "src": "/icons/dashboard-96x96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Discovery Journeys",
-      "short_name": "Discovery",
-      "description": "Explore body systems and health",
-      "url": "/discovery",
-      "icons": [{ "src": "/icons/discovery-96x96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Behavioral Assessment",
-      "short_name": "Assessment",
-      "description": "Check emotional wellness",
-      "url": "/behavioral",
-      "icons": [{ "src": "/icons/behavioral-96x96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Book Screening",
-      "short_name": "Screening",
-      "description": "Schedule health screening",
-      "url": "/dashboard?action=book-screening",
-      "icons": [{ "src": "/icons/screening-96x96.png", "sizes": "96x96" }]
-    }
-  ],
   "screenshots": [
     {
-      "src": "/screenshots/dashboard-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Child Health Dashboard"
-    },
-    {
-      "src": "/screenshots/discovery-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Discovery Journeys"
-    },
-    {
-      "src": "/screenshots/dashboard-desktop.png",
+      "src": "/screenshots/dashboard.png",
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Desktop Dashboard"
+      "label": "Parent Dashboard"
+    },
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Mobile View"
     }
   ],
-  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "My Children",
+      "short_name": "Children",
+      "description": "View your children's profiles",
+      "url": "/dashboard/children",
+      "icons": [{ "src": "/icons/children-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Appointments",
+      "short_name": "Appointments",
+      "description": "View upcoming appointments",
+      "url": "/dashboard/appointments",
+      "icons": [{ "src": "/icons/calendar-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Messages",
+      "short_name": "Messages",
+      "description": "Contact your clinic",
+      "url": "/dashboard/messages",
+      "icons": [{ "src": "/icons/message-96x96.png", "sizes": "96x96" }]
+    }
+  ],
   "related_applications": [],
-  "edge_side_panel": {
-    "preferred_width": 400
-  }
+  "prefer_related_applications": false
 }
