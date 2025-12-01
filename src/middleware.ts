@@ -1,8 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
 
 // Define public routes that don't require authentication
 const isPublicRoute = createRouteMatcher([
@@ -12,6 +9,14 @@ const isPublicRoute = createRouteMatcher([
   '/api/webhooks(.*)',
   '/api/care-plans(.*)',
   '/api/clinics/verify(.*)',
+  '/care-plans(.*)',
+  '/care-plans-dynamic(.*)',
+  '/plans(.*)',
+  '/interventions(.*)',
+  '/specialists(.*)',
+  '/behavioral(.*)',
+  '/discovery(.*)',
+  '/demo(.*)',
 ])
 
 // Define admin routes
@@ -41,42 +46,11 @@ export default clerkMiddleware(async (auth, req) => {
     return
   }
 
-  // Get user from database to check role
-  try {
-    const user = await prisma.user.findUnique({
-      where: { clerkId: userId },
-      select: { role: true, email: true }
-    })
-
-    if (!user) {
-      // User not in database yet - might be first login
-      // Redirect to onboarding or wait for webhook
-      return NextResponse.redirect(new URL('/sign-in', req.url))
-    }
-
-    const { role } = user
-    const path = req.nextUrl.pathname
-
-    // Role-based routing
-    if (role === 'super_admin' || role === 'admin') {
-      // Admins can access admin routes
-      if (isParentRoute(req) && !isAdminRoute(req)) {
-        // Redirect parents trying to access admin routes to admin dashboard
-        return NextResponse.redirect(new URL('/admin/dashboard', req.url))
-      }
-    } else if (role === 'parent' || role === 'demo') {
-      // Parents can only access parent routes
-      if (isAdminRoute(req)) {
-        // Redirect admins trying to access parent routes to parent dashboard
-        return NextResponse.redirect(new URL('/dashboard', req.url))
-      }
-    }
-
-    return NextResponse.next()
-  } catch (error) {
-    console.error('Error in middleware:', error)
-    return NextResponse.next()
-  }
+  // Note: Role-based routing is now handled in individual page components
+  // to avoid Prisma usage in Edge Runtime middleware
+  // Each protected page should check user role via API route or server component
+  
+  return NextResponse.next()
 })
 
 export const config = {
