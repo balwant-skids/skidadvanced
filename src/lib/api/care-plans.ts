@@ -137,32 +137,36 @@ class CarePlansStore {
           {
             serviceId: 'hearing-assessment',
             service: this.services[1],
-            frequency: 'bi-weekly',
-            sessions: 6,
+            frequency: 'quarterly',
+            sessions: 4,
             priority: 'primary',
             customizations: []
           }
         ],
         pricing: {
-          basePrice: 299,
+          basePrice: 3999,
           discountPercentage: 0,
-          finalPrice: 299,
+          finalPrice: 3999,
           currency: 'INR',
-          billingCycle: 'monthly',
+          billingCycle: 'annually',
           setupFee: 0,
           cancellationFee: 0,
           upgradeCredit: 100
         },
         duration: 12,
         features: [
-          'Quarterly vision screening',
-          'Bi-weekly hearing assessment',
-          'Basic health reports',
-          'Family consultation'
+          '4x Health Screening (72 parameters)',
+          '1x Behavioral Assessment',
+          '1x Nutrition Analysis',
+          'Growth & development tracking',
+          'Vaccination schedule management',
+          'Basic educational newsletter',
+          '10% consultation discount',
+          '5% vaccination discount'
         ],
         benefits: [
-          'Early detection of vision issues',
-          'Hearing development monitoring',
+          'Early detection of health issues',
+          'Foundational health monitoring',
           'Peace of mind for parents',
           'Professional guidance'
         ],
@@ -178,7 +182,187 @@ class CarePlansStore {
           satisfactionScore: 4.2,
           retentionRate: 78,
           averageEngagement: 82,
-          revenueGenerated: 44850,
+          revenueGenerated: 599850,
+          lastUpdated: new Date()
+        }
+      },
+      {
+        id: 'comprehensive-plan',
+        name: 'Comprehensive Care Plan',
+        displayName: 'SKIDS Comprehensive',
+        description: 'Complete health and development protection with specialized assessments',
+        category: 'comprehensive',
+        theme: {
+          id: 'holistic-care',
+          name: 'Holistic Care',
+          description: 'Comprehensive approach to child health',
+          focus: 'holistic',
+          keywords: ['comprehensive', 'specialized', 'complete care'],
+          recommendedServices: ['vision-screening', 'hearing-assessment', 'nutrition-analysis'],
+          aiPrompts: ['Emphasize comprehensive coverage', 'Highlight specialized assessments']
+        },
+        targetAgeGroup: { min: 6, max: 216, label: '6 months - 18 years', adaptations: [] },
+        services: [
+          {
+            serviceId: 'vision-screening',
+            service: this.services[0],
+            frequency: 'quarterly',
+            sessions: 4,
+            priority: 'primary',
+            customizations: []
+          },
+          {
+            serviceId: 'hearing-assessment',
+            service: this.services[1],
+            frequency: 'quarterly',
+            sessions: 4,
+            priority: 'primary',
+            customizations: []
+          },
+          {
+            serviceId: 'nutrition-analysis',
+            service: this.services[2],
+            frequency: 'quarterly',
+            sessions: 2,
+            priority: 'primary',
+            customizations: []
+          }
+        ],
+        pricing: {
+          basePrice: 6999,
+          discountPercentage: 0,
+          finalPrice: 6999,
+          currency: 'INR',
+          billingCycle: 'annually',
+          setupFee: 0,
+          cancellationFee: 0,
+          upgradeCredit: 200
+        },
+        duration: 12,
+        features: [
+          'Everything in Essential Care',
+          'FDA Eye-Tracking Autism Screening',
+          '2x Nutrition Analysis',
+          'Limited specialized behavioral assessments',
+          'SUBSIDIZED premium educational content',
+          'Weekly health insights newsletter',
+          'Annual vision & hearing screening',
+          'Priority emergency consultations',
+          '15% consultation discount',
+          '10% vaccination discount'
+        ],
+        benefits: [
+          'Complete health protection',
+          'Early detection of vision and hearing issues',
+          'Specialized developmental assessments',
+          'Enhanced educational resources'
+        ],
+        isActive: true,
+        isPromotional: false,
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        version: 1,
+        analytics: {
+          enrollments: 250,
+          completionRate: 88,
+          satisfactionScore: 4.5,
+          retentionRate: 85,
+          averageEngagement: 88,
+          revenueGenerated: 1749750,
+          lastUpdated: new Date()
+        }
+      },
+      {
+        id: 'guardian-plan',
+        name: 'Guardian Care Plan',
+        displayName: 'SKIDS Guardian',
+        description: 'Ultimate pediatric care with maximum coverage and personalized health optimization',
+        category: 'premium',
+        theme: {
+          id: 'premium-care',
+          name: 'Premium Care',
+          description: 'Maximum protection and personalized optimization',
+          focus: 'therapeutic',
+          keywords: ['premium', 'unlimited', 'personalized', 'optimization'],
+          recommendedServices: ['vision-screening', 'hearing-assessment', 'nutrition-analysis'],
+          aiPrompts: ['Emphasize premium benefits', 'Highlight unlimited access']
+        },
+        targetAgeGroup: { min: 6, max: 216, label: '6 months - 18 years', adaptations: [] },
+        services: [
+          {
+            serviceId: 'vision-screening',
+            service: this.services[0],
+            frequency: 'quarterly',
+            sessions: 4,
+            priority: 'primary',
+            customizations: []
+          },
+          {
+            serviceId: 'hearing-assessment',
+            service: this.services[1],
+            frequency: 'quarterly',
+            sessions: 4,
+            priority: 'primary',
+            customizations: []
+          },
+          {
+            serviceId: 'nutrition-analysis',
+            service: this.services[2],
+            frequency: 'quarterly',
+            sessions: 4,
+            priority: 'primary',
+            customizations: []
+          }
+        ],
+        pricing: {
+          basePrice: 9999,
+          discountPercentage: 0,
+          finalPrice: 9999,
+          currency: 'INR',
+          billingCycle: 'annually',
+          setupFee: 0,
+          cancellationFee: 0,
+          upgradeCredit: 300
+        },
+        duration: 12,
+        features: [
+          'Everything in Comprehensive Care',
+          'FDA CE Hearing Assessment',
+          '2x Behavioral Assessment',
+          '4x Nutrition + Digital Parenting',
+          'Unlimited specialized behavioral assessments',
+          'FULL PREMIUM educational platform access',
+          'Personalized learning recommendations',
+          'Daily health & development insights',
+          'Exclusive educational workshops',
+          'Monthly health optimization consultations',
+          'Advanced genetic counseling',
+          '24/7 pediatric helpline access',
+          'Sibling screening discounts',
+          '20% consultation discount',
+          '15% vaccination discount'
+        ],
+        benefits: [
+          'Maximum health protection',
+          'Personalized care and optimization',
+          'Unlimited specialized assessments',
+          'Premium educational resources',
+          'Priority access to all services'
+        ],
+        isActive: true,
+        isPromotional: false,
+        createdBy: 'system',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        version: 1,
+        analytics: {
+          enrollments: 100,
+          completionRate: 92,
+          satisfactionScore: 4.8,
+          retentionRate: 90,
+          averageEngagement: 95,
+          revenueGenerated: 999900,
           lastUpdated: new Date()
         }
       }
