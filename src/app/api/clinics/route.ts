@@ -17,17 +17,50 @@ export async function GET(req: NextRequest) {
   try {
     const user = await requireAdmin()
     
-    const clinics = await prisma.clinic.findMany({
-      include: {
-        manager: {
-          select: { id: true, name: true, email: true }
+    // Get query parameters for search and filter
+    const searchParams = req.nextUrl.searchParams
+    const search = searchParams.get('search')
+    const status = searchParams.get('status')
+    const limit = parseInt(searchParams.get('limit') || '100')
+    const offset = parseInt(searchParams.get('offset') || '0')
+
+    // Build where clause
+    const where: any = {}
+
+    // Search by name, code, or email
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { code: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } },
+      ]
+    }
+
+    // Filter by status
+    if (status === 'active') {
+      where.isActive = true
+    } else if (status === 'inactive') {
+      where.isActive = false
+    }
+
+    // Fetch clinics with pagination
+    const [clinics, total] = await Promise.all([
+      prisma.clinic.findMany({
+        where,
+        include: {
+          manager: {
+            select: { id: true, name: true, email: true }
+          },
+          _count: {
+            select: { parents: true, whitelist: true }
+          }
         },
-        _count: {
-          select: { parents: true, whitelist: true }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+        skip: offset,
+      }),
+      prisma.clinic.count({ where }),
+    ])
 
     // Transform to include subscriber counts
     const clinicsWithCounts = clinics.map(clinic => ({
@@ -36,7 +69,15 @@ export async function GET(req: NextRequest) {
       whitelistCount: clinic._count.whitelist,
     }))
 
-    return NextResponse.json(clinicsWithCounts)
+    return NextResponse.json({
+      clinics: clinicsWithCounts,
+      pagination: {
+        total,
+        limit,
+        offset,
+        hasMore: offset + clinics.length < total,
+      },
+    })
   } catch (error: any) {
     if (error.message === 'Unauthorized') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

@@ -11,7 +11,242 @@ SKIDS Advanced is a multi-tenant child development and healthcare management pla
 
 ---
 
-## 1. SYSTEM ARCHITECTURE
+## 1. HOW TO USE THE APP
+
+### 1.1 Getting Started
+
+#### For Super Admins (Platform Administrators)
+
+**Initial Setup:**
+1. **Access the Platform**: Navigate to your deployment URL and sign in with your super admin credentials
+2. **Create Your First Clinic**:
+   - Go to `/admin/clinics`
+   - Click "Create New Clinic"
+   - Fill in clinic details (name, address, phone, email, WhatsApp number)
+   - System automatically generates a unique 6-character clinic code
+   - Share this code with clinic managers
+
+3. **Set Up Care Plans**:
+   - Navigate to `/admin/care-plans`
+   - Create subscription plans with pricing and features
+   - Plans can be global or clinic-specific
+
+4. **Create Campaigns**:
+   - Go to `/admin/campaigns`
+   - Create engagement campaigns for parents
+   - Target by clinic, plan, or all users
+   - Upload media to Cloudflare R2 storage
+
+#### For Clinic Managers
+
+**Getting Started:**
+1. **Sign Up**: Use the clinic code provided by your super admin at `/sign-up`
+2. **Whitelist Parents**:
+   - Navigate to `/admin/parents` or `/admin/whitelist`
+   - Add parent emails to your clinic's whitelist
+   - Include name and phone number (optional)
+   - Parents can only register if their email is whitelisted
+
+3. **Approve Pending Parents**:
+   - Check `/admin/whitelist/pending` for new registrations
+   - Review parent applications
+   - Approve and assign a care plan, or reject
+
+4. **Manage Parent Subscriptions**:
+   - View all parents at `/admin/parents`
+   - See subscription status (active, paused, cancelled, expired)
+   - Assign or update care plans
+
+5. **Upload Reports**:
+   - Navigate to a child's profile
+   - Upload health reports (PDF, images, documents)
+   - Files are stored securely in Cloudflare R2
+   - Parents receive push notifications automatically
+
+6. **Communicate with Parents**:
+   - Use in-app messaging at `/admin/messages`
+   - Or use WhatsApp integration (if configured)
+   - View conversation history
+
+#### For Parents
+
+**Registration Process:**
+1. **Get Clinic Code**: Obtain your clinic's unique code from your healthcare provider
+2. **Sign Up**:
+   - Go to `/sign-up`
+   - Enter your email (must be whitelisted by clinic)
+   - Enter the clinic code
+   - Complete registration with Google OAuth or email/password
+   - Wait for clinic manager approval
+
+3. **After Approval**:
+   - You'll receive notification when approved
+   - Sign in at `/sign-in`
+   - Access your dashboard at `/dashboard`
+
+**Using the Parent Dashboard:**
+
+1. **Add Your Children**:
+   - Go to `/dashboard/children`
+   - Click "Add Child"
+   - Enter child details (name, date of birth, gender, blood group, allergies)
+   - Add health metrics
+
+2. **View and Download Reports**:
+   - Navigate to `/dashboard/reports`
+   - See all uploaded reports for your children
+   - Download reports (works offline after first download)
+   - Reports are cached locally for offline access
+
+3. **Schedule Appointments**:
+   - Go to `/dashboard/appointments`
+   - Book consultations or follow-ups
+   - Receive push notification reminders 24 hours before
+
+4. **Contact Your Clinic**:
+   - Use `/dashboard/messages` for in-app messaging
+   - Or click WhatsApp button to chat directly
+   - View conversation history
+
+5. **Explore Educational Content**:
+   - **Discovery Modules** (16 body systems):
+     - Navigate to `/discovery/[module-name]`
+     - Learn about brain, heart, lungs, digestive system, etc.
+     - Interactive Kurzgesagt-style visualizations
+   
+   - **Intervention Modules** (8 health areas):
+     - Access at `/interventions/[module-name]`
+     - Nutrition, sleep, vision, hearing, dental, allergy, dermatology, focus/ADHD
+     - Practical health guidance and tips
+
+6. **Offline Mode**:
+   - App works offline after first load
+   - All child data, reports, and appointments cached locally
+   - Changes sync automatically when back online
+   - Install as PWA for app-like experience
+
+### 1.2 Key Features by Role
+
+#### Super Admin Capabilities
+- ✅ Create and manage multiple clinics
+- ✅ Generate unique clinic codes
+- ✅ View platform-wide analytics
+- ✅ Create global care plans
+- ✅ Manage campaigns across all clinics
+- ✅ Export data (CSV, reports)
+- ✅ Manage staff and vendors
+
+#### Clinic Manager Capabilities
+- ✅ Whitelist parent emails
+- ✅ Approve/reject parent registrations
+- ✅ Assign care plans to parents
+- ✅ Upload health reports for children
+- ✅ Schedule appointments
+- ✅ Send messages to parents
+- ✅ View clinic-specific analytics
+- ✅ Manage clinic settings
+
+#### Parent Capabilities
+- ✅ Register with clinic code
+- ✅ Add multiple children profiles
+- ✅ View and download health reports
+- ✅ Schedule appointments
+- ✅ Receive push notifications
+- ✅ Message clinic staff
+- ✅ Access educational modules
+- ✅ Track child development
+- ✅ Offline access to all data
+- ✅ Subscribe to care plans
+
+### 1.3 Mobile & Offline Usage
+
+**Installing as PWA (Progressive Web App):**
+1. Open the app in your mobile browser
+2. Look for "Add to Home Screen" prompt
+3. Install for app-like experience
+4. Works offline after installation
+
+**Offline Functionality:**
+- All child profiles cached locally
+- Reports available offline after first download
+- Appointments viewable offline
+- Educational modules accessible offline
+- Changes sync when connection restored
+- Conflict resolution: server data wins
+
+**Push Notifications:**
+- Register FCM token on first login
+- Receive notifications for:
+  - New report uploads
+  - Appointment reminders (24 hours before)
+  - New messages from clinic
+  - Campaign announcements
+
+### 1.4 Common Workflows
+
+**Workflow 1: Onboarding a New Parent**
+```
+Clinic Manager → Whitelist parent email
+Parent → Sign up with clinic code
+Parent → Wait for approval
+Clinic Manager → Approve and assign plan
+Parent → Access dashboard
+Parent → Add children
+Parent → Start using features
+```
+
+**Workflow 2: Uploading and Viewing Reports**
+```
+Clinic Manager → Upload report for child
+System → Store in Cloudflare R2
+System → Send push notification to parent
+Parent → Receive notification
+Parent → View/download report
+System → Cache report locally
+Parent → Access offline anytime
+```
+
+**Workflow 3: Scheduling Appointments**
+```
+Parent → Go to appointments page
+Parent → Click "Schedule Appointment"
+Parent → Select child, type, date/time
+System → Create appointment
+System → Set reminder for 24 hours before
+System → Send push notification at reminder time
+Parent → Attend appointment
+```
+
+### 1.5 Troubleshooting
+
+**"Email not whitelisted" error:**
+- Contact your clinic manager
+- Ensure they've added your exact email to whitelist
+- Check for typos in email address
+
+**"Invalid clinic code" error:**
+- Verify code with your clinic
+- Codes are case-sensitive
+- Ensure clinic is active
+
+**Reports not loading:**
+- Check internet connection
+- Reports need to download once before offline access
+- Clear browser cache and try again
+
+**Push notifications not working:**
+- Grant notification permissions in browser
+- Re-register FCM token at `/dashboard`
+- Check browser notification settings
+
+**Offline sync issues:**
+- Ensure you've loaded data while online first
+- Check browser storage isn't full
+- Clear IndexedDB and reload
+
+---
+
+## 2. SYSTEM ARCHITECTURE
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐

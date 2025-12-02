@@ -9,6 +9,7 @@ const isPublicRoute = createRouteMatcher([
   '/api/webhooks(.*)',
   '/api/care-plans(.*)',
   '/api/clinics/verify(.*)',
+  '/api/users/status(.*)',
   '/care-plans(.*)',
   '/care-plans-dynamic(.*)',
   '/plans(.*)',
@@ -17,6 +18,7 @@ const isPublicRoute = createRouteMatcher([
   '/behavioral(.*)',
   '/discovery(.*)',
   '/demo(.*)',
+  '/pending-approval(.*)',
 ])
 
 // Define admin routes
@@ -46,9 +48,34 @@ export default clerkMiddleware(async (auth, req) => {
     return
   }
 
-  // Note: Role-based routing is now handled in individual page components
-  // to avoid Prisma usage in Edge Runtime middleware
-  // Each protected page should check user role via API route or server component
+  // Check if accessing dashboard - verify parent is active
+  const pathname = req.nextUrl.pathname
+  if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
+    try {
+      // Fetch user status from API
+      const baseUrl = req.nextUrl.origin
+      const statusResponse = await fetch(`${baseUrl}/api/users/status`, {
+        headers: {
+          'x-clerk-user-id': userId,
+        },
+      })
+
+      if (statusResponse.ok) {
+        const { role, isActive } = await statusResponse.json()
+        
+        // If parent is not active, redirect to pending approval
+        if (role === 'parent' && !isActive) {
+          return NextResponse.redirect(new URL('/pending-approval', req.url))
+        }
+      }
+    } catch (error) {
+      console.error('Error checking user status:', error)
+      // Continue on error to avoid blocking access
+    }
+  }
+
+  // Note: Additional role-based routing is handled in individual page components
+  // Each protected page should check user role via server component
   
   return NextResponse.next()
 })

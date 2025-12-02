@@ -12,6 +12,34 @@ export interface TestUser {
   clerkId?: string;
 }
 
+/**
+ * Pre-configured test users for E2E tests
+ * These should be seeded in the test database
+ */
+export const TEST_USERS = {
+  admin: {
+    email: process.env.TEST_ADMIN_EMAIL || 'admin@test.skids.com',
+    password: process.env.TEST_ADMIN_PASSWORD || 'Admin@1234',
+    name: 'Test Admin',
+    phone: '+1234567890',
+    role: 'super_admin' as const,
+  },
+  manager: {
+    email: process.env.TEST_MANAGER_EMAIL || 'manager@test.skids.com',
+    password: process.env.TEST_MANAGER_PASSWORD || 'Manager@1234',
+    name: 'Test Manager',
+    phone: '+1234567891',
+    role: 'clinic_manager' as const,
+  },
+  parent: {
+    email: process.env.TEST_PARENT_EMAIL || 'parent@test.skids.com',
+    password: process.env.TEST_PARENT_PASSWORD || 'Parent@1234',
+    name: 'Test Parent',
+    phone: '+1234567892',
+    role: 'parent' as const,
+  },
+};
+
 export interface TestClinic {
   id: string;
   code: string;

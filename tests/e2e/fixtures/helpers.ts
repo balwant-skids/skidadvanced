@@ -157,3 +157,51 @@ export async function signOut(page: Page) {
   await page.goto('/sign-out');
   await page.waitForLoadState('networkidle');
 }
+
+/**
+ * Sign in as a user
+ */
+export async function signIn(page: Page, email: string, password: string) {
+  await page.goto('/sign-in');
+  await page.waitForLoadState('networkidle');
+  
+  // Fill in credentials
+  await fillField(page, 'input[name="email"]', email);
+  await fillField(page, 'input[name="password"]', password);
+  
+  // Submit form
+  await page.click('button[type="submit"]');
+  
+  // Wait for redirect after successful login
+  await page.waitForLoadState('networkidle');
+  
+  // Verify we're logged in (should not be on sign-in page)
+  await expect(page).not.toHaveURL(/\/sign-in/);
+}
+
+/**
+ * Sign in as admin
+ */
+export async function signInAsAdmin(page: Page) {
+  const adminEmail = process.env.TEST_ADMIN_EMAIL || 'admin@test.skids.com';
+  const adminPassword = process.env.TEST_ADMIN_PASSWORD || 'Admin@1234';
+  await signIn(page, adminEmail, adminPassword);
+}
+
+/**
+ * Sign in as clinic manager
+ */
+export async function signInAsClinicManager(page: Page) {
+  const managerEmail = process.env.TEST_MANAGER_EMAIL || 'manager@test.skids.com';
+  const managerPassword = process.env.TEST_MANAGER_PASSWORD || 'Manager@1234';
+  await signIn(page, managerEmail, managerPassword);
+}
+
+/**
+ * Sign in as parent
+ */
+export async function signInAsParent(page: Page) {
+  const parentEmail = process.env.TEST_PARENT_EMAIL || 'parent@test.skids.com';
+  const parentPassword = process.env.TEST_PARENT_PASSWORD || 'Parent@1234';
+  await signIn(page, parentEmail, parentPassword);
+}

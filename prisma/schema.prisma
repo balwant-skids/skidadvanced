@@ -20,6 +20,8 @@ model User {
   name               String
   phone              String?
   role               String    @default("parent") // super_admin, clinic_manager, parent
+  isActive           Boolean   @default(false) // Whitelist status - parents need approval
+  planId             String?   // Subscription plan assigned by admin
   clinicId           String?   // Direct clinic reference for easier queries
   fcmToken           String?
   fcmTokenUpdatedAt  DateTime?
@@ -33,6 +35,7 @@ model User {
   sentMessages    Message[] @relation("SentMessages")
   uploadedReports Report[]  @relation("UploadedReports")
   subscription    Subscription?
+  assignedPlan    CarePlan? @relation("AssignedPlan", fields: [planId], references: [id])
 
   // Digital Parenting Platform relations
   authoredContent     ParentingContent[]    @relation("ContentAuthor")
@@ -51,6 +54,11 @@ model User {
   @@index([clerkId])
   @@index([email])
   @@index([clinicId])
+  @@index([isActive])
+  @@index([planId])
+  @@index([name])
+  @@index([role])
+  @@index([name, email, role])
 }
 
 model Clinic {
@@ -81,6 +89,9 @@ model Clinic {
 
   @@index([code])
   @@index([isActive])
+  @@index([name])
+  @@index([email])
+  @@index([name, code, email])
 }
 
 model ParentWhitelist {
@@ -167,6 +178,7 @@ model CarePlan {
   clinicId     String?
 
   subscriptions Subscription[]
+  assignedUsers User[]       @relation("AssignedPlan")
 
   @@index([clinicId])
   @@index([isActive])
@@ -189,6 +201,8 @@ model Subscription {
 
   @@index([status])
   @@index([endDate])
+  @@index([carePlanId])
+  @@index([status, carePlanId])
 }
 
 // ============ HEALTH MODELS ============

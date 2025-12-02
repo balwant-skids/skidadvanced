@@ -7,6 +7,11 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { Download } from 'lucide-react';
+import { exportToCSV, generateTimestampedFilename } from '@/lib/csv-export';
+import { SearchBar } from '@/components/admin/SearchBar';
+import { FilterDropdown, FilterOption } from '@/components/admin/FilterDropdown';
+import { EmptyState } from '@/components/admin/EmptyState';
 
 interface Clinic {
   id: string;
@@ -30,24 +35,78 @@ export default function ClinicsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
+  
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
     if (isLoaded) {
       fetchClinics();
     }
-  }, [isLoaded]);
+  }, [isLoaded, searchQuery, statusFilter]);
 
   const fetchClinics = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/clinics');
+      
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (searchQuery) params.append('search', searchQuery);
+      if (statusFilter.length === 1) params.append('status', statusFilter[0]);
+      
+      const res = await fetch(`/api/clinics?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch clinics');
       const data = await res.json();
       setClinics(data.clinics || []);
+      setTotalCount(data.pagination?.total || data.clinics?.length || 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load clinics');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      setExportProgress(0);
+
+      // Fetch export data
+      const res = await fetch('/api/admin/export/clinics');
+      if (!res.ok) throw new Error('Failed to fetch export data');
+      
+      const { data } = await res.json();
+      setExportProgress(50);
+
+      // Define CSV headers
+      const headers = [
+        'id', 'name', 'code', 'address', 'phone', 'email', 'whatsappNumber',
+        'isActive', 'managerName', 'managerEmail', 'parentCount', 
+        'whitelistCount', 'userCount', 'createdAt'
+      ];
+
+      // Generate and download CSV
+      await exportToCSV({
+        filename: generateTimestampedFilename('clinics_export'),
+        headers,
+        data,
+        onProgress: (progress) => setExportProgress(50 + progress / 2),
+      });
+
+      setExportProgress(100);
+      setTimeout(() => {
+        setExporting(false);
+        setExportProgress(0);
+      }, 1000);
+    } catch (err) {
+      console.error('Export error:', err);
+      alert('Failed to export clinics data');
+      setExporting(false);
+      setExportProgress(0);
     }
   };
 
@@ -77,15 +136,25 @@ export default function ClinicsPage() {
             <h1 className="text-3xl font-bold text-gray-900">Clinic Management</h1>
             <p className="text-gray-600 mt-1">Manage clinics and their settings</p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Clinic
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleExport}
+              disabled={exporting || clinics.length === 0}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              <Download className="w-5 h-5" />
+              {exporting ? `Exporting... ${exportProgress}%` : 'Export CSV'}
+            </button>
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Clinic
+            </button>
+          </div>
         </div>
 
         {error && (
@@ -94,23 +163,80 @@ export default function ClinicsPage() {
           </div>
         )}
 
+        {/* Search and Filter Bar */}
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <div className="flex-1 w-full md:w-auto">
+              <SearchBar
+                placeholder="Search by name, code, or email..."
+                onSearch={setSearchQuery}
+                initialValue={searchQuery}
+              />
+            </div>
+            <div className="flex gap-3">
+              <FilterDropdown
+                label="Status"
+                options={[
+                  { value: 'active', label: 'Active' },
+                  { value: 'inactive', label: 'Inactive' },
+                ]}
+                selectedValues={statusFilter}
+                onChange={setStatusFilter}
+              />
+            </div>
+          </div>
+          
+          {/* Result Count */}
+          {!loading && (
+            <div className="mt-3 text-sm text-gray-600">
+              Showing {clinics.length} of {totalCount} clinics
+              {(searchQuery || statusFilter.length > 0) && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setStatusFilter([]);
+                  }}
+                  className="ml-2 text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Clinics Grid */}
         <div className="grid gap-6">
           {clinics.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-              <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" 
+            <div className="bg-white rounded-xl shadow-sm">
+              {searchQuery || statusFilter.length > 0 ? (
+                <EmptyState
+                  title="No clinics found"
+                  message="No clinics match your search criteria. Try adjusting your filters."
+                  hasFilters={true}
+                  onClearFilters={() => {
+                    setSearchQuery('');
+                    setStatusFilter([]);
+                  }}
+                  icon="search"
                 />
-              </svg>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No clinics yet</h3>
-              <p className="text-gray-500 mb-4">Get started by creating your first clinic</p>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="text-blue-600 hover:text-blue-700 font-medium"
-              >
-                Create a clinic →
-              </button>
+              ) : (
+                <div className="p-12 text-center">
+                  <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" 
+                    />
+                  </svg>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No clinics yet</h3>
+                  <p className="text-gray-500 mb-4">Get started by creating your first clinic</p>
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Create a clinic →
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             clinics.map(clinic => (

@@ -7,6 +7,11 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
+import { Download } from 'lucide-react';
+import { exportToCSV, generateTimestampedFilename } from '@/lib/csv-export';
+import { SearchBar } from '@/components/admin/SearchBar';
+import { FilterDropdown } from '@/components/admin/FilterDropdown';
+import { EmptyState } from '@/components/admin/EmptyState';
 
 interface WhitelistEntry {
   id: string;
@@ -30,6 +35,13 @@ export default function ParentsPage() {
   const [whitelist, setWhitelist] = useState<WhitelistEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
+  
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [filteredWhitelist, setFilteredWhitelist] = useState<WhitelistEntry[]>([]);
 
   useEffect(() => {
     if (isLoaded) {
@@ -72,6 +84,36 @@ export default function ParentsPage() {
     }
   };
 
+  // Filter whitelist based on search and filters
+  useEffect(() => {
+    let filtered = [...whitelist];
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(entry =>
+        entry.email.toLowerCase().includes(query) ||
+        entry.name?.toLowerCase().includes(query) ||
+        entry.phone?.includes(query)
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter.length > 0) {
+      filtered = filtered.filter(entry => {
+        if (statusFilter.includes('registered')) {
+          return entry.isRegistered;
+        }
+        if (statusFilter.includes('pending')) {
+          return !entry.isRegistered;
+        }
+        return true;
+      });
+    }
+
+    setFilteredWhitelist(filtered);
+  }, [whitelist, searchQuery, statusFilter]);
+
   const removeFromWhitelist = async (email: string) => {
     if (!confirm('Remove this email from the whitelist?')) return;
     
@@ -85,6 +127,45 @@ export default function ParentsPage() {
       }
     } catch (err) {
       console.error('Failed to remove from whitelist:', err);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      setExportProgress(0);
+
+      // Fetch export data
+      const res = await fetch('/api/admin/export/parents');
+      if (!res.ok) throw new Error('Failed to fetch export data');
+      
+      const { data } = await res.json();
+      setExportProgress(50);
+
+      // Define CSV headers
+      const headers = [
+        'id', 'name', 'email', 'phone', 'isActive', 'clinicName', 'clinicCode',
+        'subscriptionStatus', 'planName', 'planPrice', 'childrenCount', 'createdAt'
+      ];
+
+      // Generate and download CSV
+      await exportToCSV({
+        filename: generateTimestampedFilename('parents_export'),
+        headers,
+        data,
+        onProgress: (progress) => setExportProgress(50 + progress / 2),
+      });
+
+      setExportProgress(100);
+      setTimeout(() => {
+        setExporting(false);
+        setExportProgress(0);
+      }, 1000);
+    } catch (err) {
+      console.error('Export error:', err);
+      alert('Failed to export parents data');
+      setExporting(false);
+      setExportProgress(0);
     }
   };
 
@@ -128,6 +209,46 @@ export default function ParentsPage() {
           </select>
         </div>
 
+        {/* Search and Filter Bar */}
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+          <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+            <div className="flex-1 w-full md:w-auto">
+              <SearchBar
+                placeholder="Search by email, name, or phone..."
+                onSearch={setSearchQuery}
+                initialValue={searchQuery}
+              />
+            </div>
+            <div className="flex gap-3">
+              <FilterDropdown
+                label="Status"
+                options={[
+                  { value: 'registered', label: 'Registered' },
+                  { value: 'pending', label: 'Pending' },
+                ]}
+                selectedValues={statusFilter}
+                onChange={setStatusFilter}
+              />
+            </div>
+          </div>
+          
+          {/* Result Count */}
+          <div className="mt-3 text-sm text-gray-600">
+            Showing {filteredWhitelist.length} of {whitelist.length} parents
+            {(searchQuery || statusFilter.length > 0) && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setStatusFilter([]);
+                }}
+                className="ml-2 text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* Whitelist Section */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden">
           <div className="p-6 border-b border-gray-200 flex justify-between items-center">
@@ -137,18 +258,27 @@ export default function ParentsPage() {
                 Only whitelisted emails can register for this clinic
               </p>
             </div>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
+            <div className="flex gap-3">
+              <button
+                onClick={handleExport}
+                disabled={exporting}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2 disabled:bg-gray-300"
+              >
+                <Download className="w-5 h-5" />
+                {exporting ? `Exporting... ${exportProgress}%` : 'Export CSV'}
+              </button>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
               Add to Whitelist
             </button>
           </div>
 
-          {whitelist.length === 0 ? (
+          {filteredWhitelist.length === 0 && whitelist.length === 0 ? (
             <div className="p-12 text-center">
               <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
@@ -158,6 +288,17 @@ export default function ParentsPage() {
               <h3 className="text-lg font-medium text-gray-900 mb-2">No parents whitelisted</h3>
               <p className="text-gray-500">Add parent emails to allow them to register</p>
             </div>
+          ) : filteredWhitelist.length === 0 ? (
+            <EmptyState
+              title="No parents found"
+              message="No parents match your search criteria. Try adjusting your filters."
+              hasFilters={true}
+              onClearFilters={() => {
+                setSearchQuery('');
+                setStatusFilter([]);
+              }}
+              icon="search"
+            />
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -172,7 +313,7 @@ export default function ParentsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {whitelist.map(entry => (
+                  {filteredWhitelist.map(entry => (
                     <tr key={entry.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm text-gray-900">{entry.email}</td>
                       <td className="px-6 py-4 text-sm text-gray-600">{entry.name || '-'}</td>

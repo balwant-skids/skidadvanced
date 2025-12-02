@@ -1,159 +1,223 @@
-/**
- * Admin Analytics API
- * GET /api/admin/analytics - Get clinic analytics overview
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
+import { requireAdmin } from '@/lib/auth-utils';
 
-export async function GET(request: NextRequest) {
+// Cache for analytics data (5 minutes)
+let analyticsCache: {
+  data: any;
+  timestamp: number;
+} | null = null;
+
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+/**
+ * GET /api/admin/analytics
+ * Returns aggregated analytics data for admin dashboard
+ */
+export async function GET(req: NextRequest) {
   try {
-    const { userId } = await auth();
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Verify admin access
+    await requireAdmin();
+
+    // Check cache
+    const now = Date.now();
+    if (analyticsCache && (now - analyticsCache.timestamp) < CACHE_TTL) {
+      return NextResponse.json({
+        ...analyticsCache.data,
+        cached: true,
+        cacheAge: Math.floor((now - analyticsCache.timestamp) / 1000),
+      });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { clerkId: userId },
-    });
-
-    if (!user || !['super_admin', 'clinic_manager', 'ADMIN'].includes(user.role)) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
-
-    const clinicFilter = user.role === 'super_admin' ? {} : { clinicId: user.clinicId };
-
-    // Get date ranges
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-    // Parallel queries for performance
+    // Fetch totals in parallel
     const [
+      totalClinics,
       totalParents,
       totalChildren,
-      activeSubscriptions,
-      totalAssessments,
-      upcomingAppointments,
-      recentRegistrations,
-      subscriptionsByPlan,
-      assessmentsByType,
-      registrationTrend,
+      totalActiveSubscriptions,
+      registrationsData,
+      subscriptionDistribution,
+      childrenPerClinic,
     ] = await Promise.all([
-      // Total parents
-      prisma.parentProfile.count({
-        where: clinicFilter.clinicId ? { clinicId: clinicFilter.clinicId } : {},
+      // Total active clinics
+      prisma.clinic.count({
+        where: { isActive: true },
+      }),
+
+      // Total active parents
+      prisma.user.count({
+        where: {
+          role: 'parent',
+          isActive: true,
+        },
       }),
 
       // Total children
-      prisma.child.count({
-        where: clinicFilter.clinicId
-          ? { parent: { clinicId: clinicFilter.clinicId } }
-          : {},
-      }),
+      prisma.child.count(),
 
-      // Active subscriptions
+      // Total active subscriptions
       prisma.subscription.count({
-        where: {
-          status: 'active',
-          ...(clinicFilter.clinicId
-            ? { user: { clinicId: clinicFilter.clinicId } }
-            : {}),
-        },
+        where: { status: 'active' },
       }),
 
-      // Total assessments
-      prisma.assessment.count({
-        where: clinicFilter.clinicId
-          ? { child: { parent: { clinicId: clinicFilter.clinicId } } }
-          : {},
-      }),
+      // Parent registrations over last 30 days
+      getRegistrationsOverTime(),
 
-      // Upcoming appointments
-      prisma.appointment.count({
-        where: {
-          scheduledAt: { gte: now },
-          status: { in: ['scheduled', 'confirmed'] },
-          ...(clinicFilter.clinicId
-            ? { child: { parent: { clinicId: clinicFilter.clinicId } } }
-            : {}),
-        },
-      }),
+      // Subscription distribution by plan
+      getSubscriptionDistribution(),
 
-      // Recent registrations (last 7 days)
-      prisma.parentProfile.count({
-        where: {
-          createdAt: { gte: sevenDaysAgo },
-          ...(clinicFilter.clinicId ? { clinicId: clinicFilter.clinicId } : {}),
-        },
-      }),
-
-      // Subscriptions by plan
-      prisma.subscription.groupBy({
-        by: ['carePlanId'],
-        where: {
-          status: 'active',
-          ...(clinicFilter.clinicId
-            ? { user: { clinicId: clinicFilter.clinicId } }
-            : {}),
-        },
-        _count: true,
-      }),
-
-      // Assessments by type
-      prisma.assessment.groupBy({
-        by: ['type'],
-        where: clinicFilter.clinicId
-          ? { child: { parent: { clinicId: clinicFilter.clinicId } } }
-          : {},
-        _count: true,
-      }),
-
-      // Registration trend (last 30 days)
-      prisma.$queryRaw`
-        SELECT DATE(createdAt) as date, COUNT(*) as count
-        FROM ParentProfile
-        WHERE createdAt >= ${thirtyDaysAgo}
-        ${clinicFilter.clinicId ? prisma.$queryRaw`AND clinicId = ${clinicFilter.clinicId}` : prisma.$queryRaw``}
-        GROUP BY DATE(createdAt)
-        ORDER BY date ASC
-      `,
+      // Children count per clinic (top 10)
+      getChildrenPerClinic(),
     ]);
 
-    // Get plan names for subscription breakdown
-    const planIds = subscriptionsByPlan.map((s) => s.carePlanId);
-    const plans = await prisma.carePlan.findMany({
-      where: { id: { in: planIds } },
-      select: { id: true, name: true },
-    });
+    const analyticsData = {
+      totals: {
+        clinics: totalClinics,
+        parents: totalParents,
+        children: totalChildren,
+        subscriptions: totalActiveSubscriptions,
+      },
+      registrations: registrationsData,
+      subscriptionDistribution,
+      childrenPerClinic,
+      timestamp: new Date().toISOString(),
+    };
 
-    const planMap = new Map(plans.map((p) => [p.id, p.name]));
+    // Update cache
+    analyticsCache = {
+      data: analyticsData,
+      timestamp: now,
+    };
 
     return NextResponse.json({
-      overview: {
-        totalParents,
-        totalChildren,
-        activeSubscriptions,
-        totalAssessments,
-        upcomingAppointments,
-        recentRegistrations,
-      },
-      subscriptionsByPlan: subscriptionsByPlan.map((s) => ({
-        plan: planMap.get(s.carePlanId) || 'Unknown',
-        count: s._count,
-      })),
-      assessmentsByType: assessmentsByType.map((a) => ({
-        type: a.type,
-        count: a._count,
-      })),
-      registrationTrend,
+      ...analyticsData,
+      cached: false,
     });
-  } catch (error) {
-    console.error('Analytics error:', error);
+  } catch (error: any) {
+    if (error.message === 'Unauthorized' || error.message === 'Forbidden') {
+      return NextResponse.json({ error: error.message }, { status: 403 });
+    }
+    console.error('Error fetching analytics:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch analytics' },
+      { error: 'Failed to fetch analytics data' },
       { status: 500 }
     );
   }
+}
+
+/**
+ * Get parent registrations over the last 30 days
+ */
+async function getRegistrationsOverTime() {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const registrations = await prisma.user.groupBy({
+    by: ['createdAt'],
+    where: {
+      role: 'parent',
+      createdAt: {
+        gte: thirtyDaysAgo,
+      },
+    },
+    _count: {
+      id: true,
+    },
+  });
+
+  // Group by date (not datetime)
+  const dateMap = new Map<string, number>();
+  
+  registrations.forEach((reg) => {
+    const date = new Date(reg.createdAt).toISOString().split('T')[0];
+    dateMap.set(date, (dateMap.get(date) || 0) + reg._count.id);
+  });
+
+  // Fill in missing dates with 0
+  const result = [];
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    result.push({
+      date: dateStr,
+      count: dateMap.get(dateStr) || 0,
+    });
+  }
+
+  return result;
+}
+
+/**
+ * Get subscription distribution by care plan
+ */
+async function getSubscriptionDistribution() {
+  const subscriptions = await prisma.subscription.findMany({
+    where: { status: 'active' },
+    include: {
+      carePlan: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  const totalActive = subscriptions.length;
+  
+  // Group by plan
+  const planMap = new Map<string, { name: string; count: number }>();
+  
+  subscriptions.forEach((sub) => {
+    const planId = sub.carePlan.id;
+    const planName = sub.carePlan.name;
+    
+    if (planMap.has(planId)) {
+      planMap.get(planId)!.count++;
+    } else {
+      planMap.set(planId, { name: planName, count: 1 });
+    }
+  });
+
+  // Convert to array with percentages
+  return Array.from(planMap.values()).map((plan) => ({
+    planName: plan.name,
+    count: plan.count,
+    percentage: totalActive > 0 ? Math.round((plan.count / totalActive) * 100 * 100) / 100 : 0,
+  })).sort((a, b) => b.count - a.count);
+}
+
+/**
+ * Get children count per clinic (top 10)
+ */
+async function getChildrenPerClinic() {
+  const clinics = await prisma.clinic.findMany({
+    where: { isActive: true },
+    include: {
+      parents: {
+        include: {
+          children: true,
+        },
+      },
+    },
+    take: 20, // Get top 20 to ensure we have 10 with children
+  });
+
+  const clinicData = clinics
+    .map((clinic) => {
+      const childCount = clinic.parents.reduce(
+        (sum, parent) => sum + parent.children.length,
+        0
+      );
+      return {
+        clinicName: clinic.name,
+        childCount,
+      };
+    })
+    .filter((clinic) => clinic.childCount > 0)
+    .sort((a, b) => b.childCount - a.childCount)
+    .slice(0, 10);
+
+  return clinicData;
 }
