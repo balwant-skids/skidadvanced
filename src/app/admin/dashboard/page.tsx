@@ -124,7 +124,7 @@ export default function AdminDashboard() {
               title="Manage Admins"
               description="Add or remove clinic administrators"
               icon="👥"
-              onClick={() => router.push('/admin/admins')}
+              onClick={() => router.push('/admin/staff-management')}
             />
             <ActionButton
               title="View Reports"

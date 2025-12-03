@@ -48,9 +48,11 @@ export default clerkMiddleware(async (auth, req) => {
     return
   }
 
-  // Check if accessing dashboard - verify parent is active
+  // Check user status for protected routes
   const pathname = req.nextUrl.pathname
-  if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
+  
+  // Check if accessing admin routes or dashboard
+  if (isAdminRoute(req) || pathname === '/dashboard' || pathname.startsWith('/dashboard/')) {
     try {
       // Fetch user status from API
       const baseUrl = req.nextUrl.origin
@@ -62,6 +64,14 @@ export default clerkMiddleware(async (auth, req) => {
 
       if (statusResponse.ok) {
         const { role, isActive } = await statusResponse.json()
+        
+        // If admin user is not active, deny access
+        if (['super_admin', 'clinic_manager', 'admin'].includes(role) && !isActive) {
+          return NextResponse.json(
+            { error: 'Account deactivated. Please contact an administrator.' },
+            { status: 403 }
+          )
+        }
         
         // If parent is not active, redirect to pending approval
         if (role === 'parent' && !isActive) {

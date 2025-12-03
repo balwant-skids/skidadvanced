@@ -40,13 +40,31 @@ export async function getOrCreateUser() {
       return null
     }
 
+    const email = clerkUser.emailAddresses[0]?.emailAddress || ''
+    
+    // Check if this is a super admin email
+    const superAdminEmails = [
+      'satissh@skids.health',
+      'satish@skids.health',
+      'drpratichi@skids.health',
+      'balwant@skids.health',
+      'fsdev@skids.health',
+      'pranit@skids.health',
+      'admin@skids.health',
+      // Add more super admin emails here
+    ]
+    
+    const role = superAdminEmails.includes(email.toLowerCase()) ? 'super_admin' : 'parent'
+    const isActive = role === 'super_admin' ? true : false // Super admins are active by default
+
     user = await prisma.user.create({
       data: {
         clerkId: userId,
-        email: clerkUser.emailAddresses[0]?.emailAddress || '',
+        email,
         name: [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(' ') || 'User',
         phone: clerkUser.phoneNumbers[0]?.phoneNumber,
-        role: 'parent',
+        role,
+        isActive,
       },
       include: {
         parentProfile: {

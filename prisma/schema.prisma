@@ -50,6 +50,9 @@ model User {
   developmentAssessments DevelopmentAssessment[] @relation("DevelopmentAssessments")
   assessmentResults   AssessmentResult[]    @relation("AssessmentResults")
   recommendationProfile RecommendationProfile?
+  
+  // Admin activity tracking
+  adminActivities     AdminActivityLog[]    @relation("AdminActivities")
 
   @@index([clerkId])
   @@index([email])
@@ -993,4 +996,23 @@ model ErrorLog {
   @@index([timestamp])
   @@index([level])
   @@index([userId])
+}
+
+model AdminActivityLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String   // created_clinic, updated_campaign, approved_parent, etc.
+  entityType String   // clinic, campaign, user, care_plan, etc.
+  entityId   String
+  metadata   String   @default("{}") // JSON stored as string
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  user       User     @relation("AdminActivities", fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([timestamp])
+  @@index([action])
+  @@index([entityType, entityId])
 }

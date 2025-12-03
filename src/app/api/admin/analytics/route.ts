@@ -112,16 +112,16 @@ async function getRegistrationsOverTime() {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const registrations = await prisma.user.groupBy({
-    by: ['createdAt'],
+  // Fetch all registrations in the last 30 days
+  const registrations = await prisma.user.findMany({
     where: {
       role: 'parent',
       createdAt: {
         gte: thirtyDaysAgo,
       },
     },
-    _count: {
-      id: true,
+    select: {
+      createdAt: true,
     },
   });
 
@@ -130,7 +130,7 @@ async function getRegistrationsOverTime() {
   
   registrations.forEach((reg) => {
     const date = new Date(reg.createdAt).toISOString().split('T')[0];
-    dateMap.set(date, (dateMap.get(date) || 0) + reg._count.id);
+    dateMap.set(date, (dateMap.get(date) || 0) + 1);
   });
 
   // Fill in missing dates with 0
