@@ -12,7 +12,9 @@ All required environment variables have been added to Vercel production environm
 
 ```
 ✅ NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY (Production)
+✅ CLERK_PUBLISHABLE_KEY (Production) - For server-side rendering
 ✅ CLERK_SECRET_KEY (Production)
+✅ CLERK_WEBHOOK_SECRET (Production)
 ✅ TURSO_DATABASE_URL (Production)
 ✅ TURSO_AUTH_TOKEN (Production)
 ```
