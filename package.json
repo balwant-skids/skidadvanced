@@ -1,7 +1,7 @@
 {
-  "name": "skids-advanced",
+  "name": "skidsadvanced-satish",
   "version": "1.0.0",
-  "description": "A Comprehensive Child Development Platform with Kurzgesagt-inspired visualizations",
+  "description": "A Comprehensive Child Development Platform with Kurzgesagt-inspired visualizations (Satish's Instance)",
   "private": true,
   "scripts": {
     "dev": "rm -rf .next && next dev",
