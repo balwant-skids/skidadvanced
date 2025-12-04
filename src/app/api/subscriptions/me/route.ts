@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth-utils'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // GET /api/subscriptions/me - Get current subscription
 export async function GET() {
   try {
