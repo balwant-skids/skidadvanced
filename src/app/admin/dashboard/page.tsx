@@ -3,18 +3,25 @@
 import { useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { Users, FileText, Send, Home, BookOpen } from 'lucide-react';
 
 interface Stats {
-  totalClinics: number;
-  totalAdmins: number;
   totalParents: number;
-  totalChildren: number;
+  whitelistedParents: number;
+  totalPlans: number;
+  totalCampaigns: number;
 }
 
 export default function AdminDashboard() {
   const { user, isLoaded } = useUser();
   const router = useRouter();
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [stats, setStats] = useState<Stats>({
+    totalParents: 0,
+    whitelistedParents: 0,
+    totalPlans: 0,
+    totalCampaigns: 0
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,29 +31,21 @@ export default function AdminDashboard() {
   }, [isLoaded, user, router]);
 
   useEffect(() => {
-    // Fetch admin stats
-    const fetchStats = async () => {
-      try {
-        const response = await fetch('/api/admin/stats');
-        if (response.ok) {
-          const data = await response.json();
-          setStats(data);
-        }
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user) {
-      fetchStats();
-    }
+    // Simulate loading stats
+    setTimeout(() => {
+      setStats({
+        totalParents: 0,
+        whitelistedParents: 0,
+        totalPlans: 0,
+        totalCampaigns: 0
+      });
+      setLoading(false);
+    }, 500);
   }, [user]);
 
   if (!isLoaded || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading...</p>
@@ -56,10 +55,36 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* Simple Navigation */}
+      <nav className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link href="/" className="flex items-center space-x-2">
+              <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                SKIDS Advanced
+              </span>
+            </Link>
+            <div className="flex items-center space-x-6">
+              <Link href="/" className="text-gray-700 hover:text-purple-600 transition-colors font-medium flex items-center space-x-1">
+                <Home className="w-4 h-4" />
+                <span>Home</span>
+              </Link>
+              <Link href="/discovery" className="text-gray-700 hover:text-purple-600 transition-colors font-medium flex items-center space-x-1">
+                <BookOpen className="w-4 h-4" />
+                <span>Educational Content</span>
+              </Link>
+              <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
+                Super Admin
+              </span>
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <header className="bg-white shadow-sm mt-8 mx-4 sm:mx-6 lg:mx-8 rounded-xl">
+        <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
@@ -68,11 +93,6 @@ export default function AdminDashboard() {
               <p className="mt-1 text-sm text-gray-600">
                 Welcome back, {user?.firstName || user?.emailAddresses[0]?.emailAddress}
               </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-medium">
-                Super Admin
-              </span>
             </div>
           </div>
         </div>
@@ -83,79 +103,88 @@ export default function AdminDashboard() {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
-            title="Total Clinics"
-            value={stats?.totalClinics || 0}
-            icon="🏥"
+            title="Total Parents"
+            value={stats.totalParents}
+            icon="👨‍👩‍👧‍👦"
             color="blue"
           />
           <StatCard
-            title="Total Admins"
-            value={stats?.totalAdmins || 0}
-            icon="👨‍💼"
-            color="purple"
-          />
-          <StatCard
-            title="Total Parents"
-            value={stats?.totalParents || 0}
-            icon="👨‍👩‍👧‍👦"
+            title="Whitelisted Parents"
+            value={stats.whitelistedParents}
+            icon="✅"
             color="green"
           />
           <StatCard
-            title="Total Children"
-            value={stats?.totalChildren || 0}
-            icon="👶"
-            color="pink"
+            title="Care Plans"
+            value={stats.totalPlans}
+            icon="📋"
+            color="purple"
+          />
+          <StatCard
+            title="Campaigns"
+            value={stats.totalCampaigns}
+            icon="📢"
+            color="orange"
           />
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Quick Actions
+        {/* Core Actions */}
+        <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+            Core Management
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <ActionButton
-              title="Add New Clinic"
-              description="Create a new clinic and generate code"
-              icon="➕"
-              onClick={() => router.push('/admin/clinics/new')}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ActionCard
+              title="Whitelist Parents"
+              description="Add parent emails to grant access to educational content and care plans"
+              icon={<Users className="w-8 h-8 text-blue-600" />}
+              href="/admin/parents"
+              color="blue"
             />
-            <ActionButton
-              title="Manage Admins"
-              description="Add or remove clinic administrators"
-              icon="👥"
-              onClick={() => router.push('/admin/staff-management')}
+            <ActionCard
+              title="Manage Care Plans"
+              description="Create, edit, and manage care plans for parents"
+              icon={<FileText className="w-8 h-8 text-purple-600" />}
+              href="/admin/care-plans"
+              color="purple"
             />
-            <ActionButton
-              title="View Reports"
-              description="Generate and view system reports"
-              icon="📊"
-              onClick={() => router.push('/admin/reports')}
+            <ActionCard
+              title="Manage Campaigns"
+              description="Create and send campaigns to parents"
+              icon={<Send className="w-8 h-8 text-green-600" />}
+              href="/admin/campaigns"
+              color="green"
+            />
+            <ActionCard
+              title="View Educational Content"
+              description="Browse and manage educational videos and modules"
+              icon={<BookOpen className="w-8 h-8 text-orange-600" />}
+              href="/discovery"
+              color="orange"
             />
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Recent Activity
-          </h2>
-          <div className="space-y-4">
-            <ActivityItem
-              action="New clinic registered"
-              details="Mumbai Pediatric Center"
-              time="2 hours ago"
-            />
-            <ActivityItem
-              action="Admin added"
-              details="mumbai.admin@skids.health"
-              time="5 hours ago"
-            />
-            <ActivityItem
-              action="Parent registered"
-              details="priya.sharma@example.com"
-              time="1 day ago"
-            />
+        {/* Quick Info */}
+        <div className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl shadow-lg p-8 text-white">
+          <h3 className="text-2xl font-bold mb-4">How It Works</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4 className="font-semibold mb-2">1. Whitelist Parents</h4>
+              <p className="text-white/90 text-sm">Add parent email addresses to grant them access to the platform</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">2. Create Care Plans</h4>
+              <p className="text-white/90 text-sm">Design care plans with pricing and features for parents to subscribe</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">3. Send Campaigns</h4>
+              <p className="text-white/90 text-sm">Create newsletters and updates to keep parents informed</p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-2">4. Parents Access Content</h4>
+              <p className="text-white/90 text-sm">Whitelisted parents can view educational videos and care plans</p>
+            </div>
           </div>
         </div>
       </main>
@@ -170,20 +199,20 @@ function StatCard({ title, value, icon, color }: {
   color: string;
 }) {
   const colorClasses = {
-    blue: 'bg-blue-50 text-blue-600',
-    purple: 'bg-purple-50 text-purple-600',
-    green: 'bg-green-50 text-green-600',
-    pink: 'bg-pink-50 text-pink-600',
+    blue: 'bg-blue-50 border-blue-200',
+    green: 'bg-green-50 border-green-200',
+    purple: 'bg-purple-50 border-purple-200',
+    orange: 'bg-orange-50 border-orange-200',
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className={`bg-white rounded-xl shadow-sm border-2 ${colorClasses[color as keyof typeof colorClasses]} p-6`}>
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-gray-600">{title}</p>
           <p className="text-3xl font-bold text-gray-900 mt-2">{value}</p>
         </div>
-        <div className={`text-4xl ${colorClasses[color as keyof typeof colorClasses]}`}>
+        <div className="text-4xl">
           {icon}
         </div>
       </div>
@@ -191,38 +220,32 @@ function StatCard({ title, value, icon, color }: {
   );
 }
 
-function ActionButton({ title, description, icon, onClick }: {
+function ActionCard({ title, description, icon, href, color }: {
   title: string;
   description: string;
-  icon: string;
-  onClick: () => void;
+  icon: React.ReactNode;
+  href: string;
+  color: string;
 }) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex items-start p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-left"
-    >
-      <div className="text-3xl mr-4">{icon}</div>
-      <div>
-        <h3 className="font-semibold text-gray-900">{title}</h3>
-        <p className="text-sm text-gray-600 mt-1">{description}</p>
-      </div>
-    </button>
-  );
-}
+  const colorClasses = {
+    blue: 'border-blue-200 hover:border-blue-500 hover:bg-blue-50',
+    purple: 'border-purple-200 hover:border-purple-500 hover:bg-purple-50',
+    green: 'border-green-200 hover:border-green-500 hover:bg-green-50',
+    orange: 'border-orange-200 hover:border-orange-500 hover:bg-orange-50',
+  };
 
-function ActivityItem({ action, details, time }: {
-  action: string;
-  details: string;
-  time: string;
-}) {
   return (
-    <div className="flex items-center justify-between py-3 border-b border-gray-200 last:border-0">
-      <div>
-        <p className="font-medium text-gray-900">{action}</p>
-        <p className="text-sm text-gray-600">{details}</p>
+    <Link
+      href={href}
+      className={`flex items-start p-6 border-2 ${colorClasses[color as keyof typeof colorClasses]} rounded-xl transition-all group`}
+    >
+      <div className="mr-4 group-hover:scale-110 transition-transform">
+        {icon}
       </div>
-      <span className="text-sm text-gray-500">{time}</span>
-    </div>
+      <div>
+        <h3 className="font-semibold text-gray-900 text-lg mb-1">{title}</h3>
+        <p className="text-sm text-gray-600">{description}</p>
+      </div>
+    </Link>
   );
 }

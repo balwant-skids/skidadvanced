@@ -23,7 +23,7 @@ export default function HomePage() {
               <Link href="/discovery" className="text-gray-700 hover:text-purple-600 transition-colors font-medium">Discovery</Link>
               <Link href="/interventions" className="text-gray-700 hover:text-purple-600 transition-colors font-medium">Interventions</Link>
               <Link href="/specialists" className="text-gray-700 hover:text-purple-600 transition-colors font-medium">Specialists</Link>
-              {!isAuthenticated && <Link href="/sign-in" className="text-gray-700 hover:text-purple-600 transition-colors font-medium">
+              {!isAuthenticated && <Link href="/sign-up" className="text-gray-700 hover:text-purple-600 transition-colors font-medium">
                 <button className="bg-purple-600 text-white px-4 py-2 rounded-md">Get Started</button>
               </Link>}
             </div>
