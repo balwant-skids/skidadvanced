@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireAdmin, requireSuperAdmin } from '@/lib/auth-utils'
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 // Generate unique 6-character clinic code
 function generateClinicCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Removed confusing chars

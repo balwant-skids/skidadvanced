@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireAdmin } from '@/lib/auth-utils'
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 // GET /api/clinics/[id]/whitelist - List whitelisted parents
 export async function GET(
   req: NextRequest,

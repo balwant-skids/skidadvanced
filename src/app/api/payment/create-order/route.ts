@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Razorpay from 'razorpay'
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 function getRazorpayInstance() {
   const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
   const keySecret = process.env.RAZORPAY_KEY_SECRET

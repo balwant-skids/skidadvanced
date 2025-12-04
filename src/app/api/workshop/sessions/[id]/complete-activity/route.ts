@@ -8,9 +8,6 @@ import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { getSession, completeActivity } from '@/lib/workshop/session-service';
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 interface RouteParams {
   params: Promise<{ id: string }>;
 }

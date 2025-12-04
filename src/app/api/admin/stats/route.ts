@@ -2,9 +2,6 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { PrismaClient } from '@prisma/client';
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 const prisma = new PrismaClient();
 
 export async function GET() {

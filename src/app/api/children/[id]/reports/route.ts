@@ -14,9 +14,6 @@ import {
 } from '@/lib/storage';
 import { notifyReportUploaded } from '@/lib/notification-triggers';
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 // POST - Upload a report for a child
 export async function POST(
   request: NextRequest,

@@ -4,9 +4,6 @@ import { ContentService } from '@/lib/parenting/content-service';
 import { ContentValidation } from '@/lib/parenting/content-utils';
 import { CreateContentInput } from '@/types/parenting';
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 /**
  * POST /api/parenting/content - Create new parenting content
  * 

@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { SearchService } from '@/lib/parenting/search-service';
 import { ContentValidation } from '@/lib/parenting/content-utils';
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 /**
  * GET /api/parenting/content/search - Advanced content search
  * 

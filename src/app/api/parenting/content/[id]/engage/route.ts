@@ -3,9 +3,6 @@ import { auth } from '@clerk/nextjs/server';
 import { EngagementService } from '@/lib/parenting/engagement-service';
 import { EngagementData } from '@/types/parenting';
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 /**
  * POST /api/parenting/content/[id]/engage - Track content engagement
  * 

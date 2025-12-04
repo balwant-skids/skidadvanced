@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth-utils'
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 // GET /api/children/[id] - Get child with health data
 export async function GET(
   req: NextRequest,

@@ -3,9 +3,6 @@ import { auth } from '@clerk/nextjs/server';
 import { ResourceService } from '@/lib/parenting/resource-service';
 import { prisma } from '@/lib/prisma';
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 /**
  * POST /api/parenting/resources/[id]/download - Download resource
  */

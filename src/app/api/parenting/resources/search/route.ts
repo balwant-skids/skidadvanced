@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { ResourceService } from '@/lib/parenting/resource-service';
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 /**
  * GET /api/parenting/resources/search - Search resources
  */

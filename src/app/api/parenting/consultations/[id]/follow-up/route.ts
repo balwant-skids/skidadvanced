@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { ExpertService } from '@/lib/parenting/expert-service';
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 /**
  * POST /api/parenting/consultations/[id]/follow-up - Request follow-up consultation
  */

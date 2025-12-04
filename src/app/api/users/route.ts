@@ -2,9 +2,6 @@ import { prisma } from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 // GET /api/users - Get current user info
 export async function GET() {
   try {

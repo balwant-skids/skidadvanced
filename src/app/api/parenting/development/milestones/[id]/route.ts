@@ -3,9 +3,6 @@ import { auth } from '@clerk/nextjs/server';
 import { DevelopmentService } from '@/lib/parenting/development-service';
 import { prisma } from '@/lib/prisma';
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 /**
  * PUT /api/parenting/development/milestones/[id] - Update milestone progress
  */

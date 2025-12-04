@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { RecommendationService } from '@/lib/parenting/recommendation-service';
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 /**
  * POST /api/parenting/recommendations/feedback - Track recommendation accuracy
  */

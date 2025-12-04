@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 // GET /api/clinics/verify?code=XXXXXX - Verify clinic code (public)
 export async function GET(req: NextRequest) {
   try {
