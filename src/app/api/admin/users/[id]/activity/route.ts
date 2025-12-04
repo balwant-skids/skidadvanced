@@ -4,6 +4,9 @@ import { ActivityLogQuerySchema } from '@/lib/validations/admin-user'
 import { getUserActivityLogs } from '@/lib/utils/activity-logger'
 import { ZodError } from 'zod'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/users/[id]/activity
  * Get activity logs for a specific admin user

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { requireSuperAdmin } from '@/lib/auth-utils'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // GET /api/admin/staff - List all admin users (super_admin and clinic_manager)
 export async function GET(req: NextRequest) {
   try {

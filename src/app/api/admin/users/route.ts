@@ -6,6 +6,9 @@ import { serializeAdminUserList } from '@/lib/utils/admin-user-serializer'
 import { logAdminActivity, AdminActions, EntityTypes } from '@/lib/utils/activity-logger'
 import { ZodError } from 'zod'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/users
  * List all admin users with filtering, pagination, and sorting

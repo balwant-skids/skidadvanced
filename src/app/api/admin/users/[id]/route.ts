@@ -6,6 +6,9 @@ import { serializeAdminUser } from '@/lib/utils/admin-user-serializer'
 import { logAdminActivity, AdminActions, EntityTypes, getUserActivitySummary } from '@/lib/utils/activity-logger'
 import { ZodError } from 'zod'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/admin/users/[id]
  * Get detailed information about a specific admin user
