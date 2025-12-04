@@ -1,0 +1,25 @@
+# Cloudflare Pages Configuration for SKIDS Advanced
+# Feature: skids-e2e-deployment
+# Validates: Requirements 5.5, 6.3, 12.1, 12.2, 12.3
+
+name = "skids-advanced"
+compatibility_date = "2024-01-01"
+
+# Pages configuration
+pages_build_output_dir = ".next"
+
+# Environment variables (secrets managed via Cloudflare dashboard or CLI)
+# Required secrets:
+# - DATABASE_URL
+# - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+# - CLERK_SECRET_KEY
+# - CLERK_WEBHOOK_SECRET
+# - CLOUDFLARE_R2_ENDPOINT
+# - CLOUDFLARE_R2_BUCKET
+# - CLOUDFLARE_R2_ACCESS_KEY_ID
+# - CLOUDFLARE_R2_SECRET_ACCESS_KEY
+# - NEXT_PUBLIC_R2_PUBLIC_URL
+# - NEXT_PUBLIC_FIREBASE_PROJECT_ID
+# - FIREBASE_SERVICE_ACCOUNT_KEY
+# - RAZORPAY_KEY_ID (optional)
+# - RAZORPAY_KEY_SECRET (optional)

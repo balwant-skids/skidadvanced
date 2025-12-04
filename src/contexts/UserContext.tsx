@@ -1,12 +1,12 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { SessionProvider, signIn, signOut, useSession } from 'next-auth/react';
+import { useAuth, useUser, useClerk } from '@clerk/nextjs';
 
 interface UserContextType {
   registerUser: (email: string, password: string, name: string, role: string) => Promise<any>;
   loginUser: (email: string, password: string) => Promise<any>;
-  logoutUser: () => Promise<any>;
+  logoutUser: () => Promise<void>;
   userDetails: any;
   setUserDetails: (details: any) => void;
   isLoading: boolean;
@@ -16,37 +16,34 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const { data: session, status } = useSession();
+  const { isLoaded, isSignedIn, userId } = useAuth();
+  const { user: clerkUser } = useUser();
+  const { signOut } = useClerk();
   const [userDetails, setUserDetails] = useState<any>(null);
 
   const registerUser = async (email: string, password: string, name: string, role: string) => {
-    const res = await fetch('/api/users', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, name, role })
-    });
-    return res.json();
+    // With Clerk, registration is handled by Clerk's SignUp component
+    // This is kept for backwards compatibility
+    console.warn('registerUser is deprecated with Clerk. Use Clerk SignUp component.');
+    return { error: 'Use Clerk SignUp component' };
   };
 
   const loginUser = async (email: string, password: string) => {
-    const res = await signIn('credentials', {
-      redirect: false,
-      email,
-      password
-    });
-    return res;
+    // With Clerk, login is handled by Clerk's SignIn component
+    console.warn('loginUser is deprecated with Clerk. Use Clerk SignIn component.');
+    return { error: 'Use Clerk SignIn component' };
   };
 
   const logoutUser = async () => {
-    const res = await signOut();
-    return res;
+    await signOut();
+    setUserDetails(null);
   };
 
   useEffect(() => {
     const fetchUserDetails = async () => {
-      if (session?.user?.email && !userDetails) {
+      if (isSignedIn && userId && !userDetails) {
         try {
-          const res = await fetch(`/api/users`, {
+          const res = await fetch('/api/users', {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
           });
@@ -61,18 +58,27 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    fetchUserDetails();
-  }, [session?.user?.email, userDetails]);
+    if (isLoaded) {
+      fetchUserDetails();
+    }
+  }, [isLoaded, isSignedIn, userId, userDetails]);
+
+  // Clear user details on sign out
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) {
+      setUserDetails(null);
+    }
+  }, [isLoaded, isSignedIn]);
 
   return (
     <UserContext.Provider value={{
-        userDetails,
-        setUserDetails,
-        isLoading: status === 'loading',
-        registerUser,
-        loginUser,
-        logoutUser,
-        isAuthenticated: !!userDetails
+      userDetails,
+      setUserDetails,
+      isLoading: !isLoaded,
+      registerUser,
+      loginUser,
+      logoutUser,
+      isAuthenticated: isSignedIn && !!userDetails
     }}>
       {children}
     </UserContext.Provider>
@@ -87,4 +93,4 @@ export function useUserContext() {
   }
 
   return context;
-} 
+}

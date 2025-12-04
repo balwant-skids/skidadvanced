@@ -44,204 +44,226 @@ import { Navigation } from '@/components/layout/Navigation'
 import { DrSkidsChat } from '@/components/chat/DrSkidsChat'
 import { usePermissions, useRole } from '@/hooks/useAuth'
 
-interface StaffMember {
+interface AdminUser {
   id: string
-  firstName: string
-  lastName: string
   email: string
-  phone: string
+  name: string
+  phone: string | null
   role: string
-  department: string
-  position: string
-  status: 'active' | 'inactive' | 'pending' | 'suspended'
-  permissions: string[]
-  joinDate: Date
-  lastLogin: Date
-  avatar?: string
-  performance: {
-    rating: number
-    tasksCompleted: number
-    vendorsManaged: number
-    responseTime: number
-  }
-  responsibilities: string[]
-  certifications: string[]
+  isActive: boolean
+  clinicId: string | null
+  createdAt: string
+  updatedAt: string
+  clinic?: {
+    id: string
+    name: string
+  } | null
+  managedClinic?: {
+    id: string
+    name: string
+  } | null
+  lastLogin?: string | null
+  activityCount?: number
+}
+
+interface Clinic {
+  id: string
+  name: string
+  code: string
 }
 
 export default function StaffManagementPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'staff' | 'roles' | 'permissions' | 'analytics'>('overview')
-  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([])
+  const [staffMembers, setStaffMembers] = useState<AdminUser[]>([])
+  const [clinics, setClinics] = useState<Clinic[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null)
+  const [selectedStaff, setSelectedStaff] = useState<AdminUser | null>(null)
   const [showStaffModal, setShowStaffModal] = useState(false)
+  const [editingStaff, setEditingStaff] = useState<AdminUser | null>(null)
+  const [roleFilter, setRoleFilter] = useState<string>('')
+  const [statusFilter, setStatusFilter] = useState<string>('')
+  const [modalLoading, setModalLoading] = useState(false)
+  const [modalError, setModalError] = useState<string | null>(null)
   const { hasPermission } = usePermissions()
   const { isAdmin, isStaff } = useRole()
 
+  // Form state
+  const [formData, setFormData] = useState({
+    email: '',
+    name: '',
+    role: 'admin' as 'super_admin' | 'clinic_manager' | 'admin',
+    clinicId: '',
+    phone: '',
+  })
+
   useEffect(() => {
     loadStaffData()
-  }, [])
+    loadClinics()
+  }, [roleFilter, statusFilter])
+
+  const loadClinics = async () => {
+    try {
+      const response = await fetch('/api/clinics?limit=100')
+      if (response.ok) {
+        const data = await response.json()
+        setClinics(data.clinics || [])
+      }
+    } catch (error) {
+      console.error('Error loading clinics:', error)
+    }
+  }
 
   const loadStaffData = async () => {
     setLoading(true)
+    setError(null)
     try {
-      // Mock staff data - in production, this would come from an API
-      const mockStaff: StaffMember[] = [
-        {
-          id: 'staff-001',
-          firstName: 'Emma',
-          lastName: 'Wilson',
-          email: 'emma.wilson@skids.clinic',
-          phone: '+1-555-0101',
-          role: 'staff',
-          department: 'Vendor Management',
-          position: 'Senior Vendor Relations Manager',
-          status: 'active',
-          permissions: ['manage_vendors', 'approve_contracts', 'view_analytics'],
-          joinDate: new Date('2023-01-15'),
-          lastLogin: new Date(),
-          avatar: '/avatars/emma-wilson.jpg',
-          performance: {
-            rating: 4.8,
-            tasksCompleted: 127,
-            vendorsManaged: 15,
-            responseTime: 2.3
-          },
-          responsibilities: [
-            'Vendor onboarding and relationship management',
-            'Contract negotiation and approval',
-            'Performance monitoring and reporting',
-            'Compliance verification'
-          ],
-          certifications: ['Vendor Management Professional', 'HIPAA Compliance']
-        },
-        {
-          id: 'staff-002',
-          firstName: 'Michael',
-          lastName: 'Chen',
-          email: 'michael.chen@skids.clinic',
-          phone: '+1-555-0102',
-          role: 'staff',
-          department: 'Technical Integration',
-          position: 'Integration Specialist',
-          status: 'active',
-          permissions: ['manage_integrations', 'technical_review', 'system_monitoring'],
-          joinDate: new Date('2023-03-20'),
-          lastLogin: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-          avatar: '/avatars/michael-chen.jpg',
-          performance: {
-            rating: 4.6,
-            tasksCompleted: 89,
-            vendorsManaged: 8,
-            responseTime: 1.8
-          },
-          responsibilities: [
-            'Technical integration setup and testing',
-            'API documentation and support',
-            'System monitoring and troubleshooting',
-            'Security compliance verification'
-          ],
-          certifications: ['AWS Certified', 'Security+ Certified']
-        },
-        {
-          id: 'staff-003',
-          firstName: 'Sarah',
-          lastName: 'Rodriguez',
-          email: 'sarah.rodriguez@skids.clinic',
-          phone: '+1-555-0103',
-          role: 'staff',
-          department: 'Quality Assurance',
-          position: 'QA Manager',
-          status: 'active',
-          permissions: ['quality_review', 'vendor_assessment', 'compliance_audit'],
-          joinDate: new Date('2022-11-10'),
-          lastLogin: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
-          avatar: '/avatars/sarah-rodriguez.jpg',
-          performance: {
-            rating: 4.9,
-            tasksCompleted: 156,
-            vendorsManaged: 12,
-            responseTime: 1.5
-          },
-          responsibilities: [
-            'Quality assurance and testing protocols',
-            'Vendor performance evaluation',
-            'Compliance auditing and reporting',
-            'Process improvement initiatives'
-          ],
-          certifications: ['Six Sigma Black Belt', 'ISO 27001 Lead Auditor']
-        },
-        {
-          id: 'staff-004',
-          firstName: 'David',
-          lastName: 'Kim',
-          email: 'david.kim@skids.clinic',
-          phone: '+1-555-0104',
-          role: 'staff',
-          department: 'Analytics',
-          position: 'Data Analyst',
-          status: 'pending',
-          permissions: ['view_analytics', 'generate_reports'],
-          joinDate: new Date('2024-01-08'),
-          lastLogin: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-          avatar: '/avatars/david-kim.jpg',
-          performance: {
-            rating: 4.2,
-            tasksCompleted: 23,
-            vendorsManaged: 3,
-            responseTime: 3.1
-          },
-          responsibilities: [
-            'Data analysis and reporting',
-            'ROI analysis and forecasting',
-            'Performance metrics tracking',
-            'Dashboard development'
-          ],
-          certifications: ['Google Analytics Certified']
-        }
-      ]
+      // Build query parameters
+      const params = new URLSearchParams()
+      if (searchTerm) params.append('search', searchTerm)
+      if (roleFilter) params.append('role', roleFilter)
+      if (statusFilter) params.append('status', statusFilter)
+      params.append('limit', '100')
+      params.append('sortBy', 'createdAt')
+      params.append('sortOrder', 'desc')
+
+      const response = await fetch(`/api/admin/users?${params.toString()}`)
       
-      setStaffMembers(mockStaff)
+      if (!response.ok) {
+        throw new Error('Failed to fetch admin users')
+      }
+
+      const data = await response.json()
+      setStaffMembers(data.users || [])
     } catch (error) {
       console.error('Error loading staff data:', error)
+      setError(error instanceof Error ? error.message : 'Failed to load staff data')
     } finally {
       setLoading(false)
     }
   }
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      'active': 'bg-green-100 text-green-800',
-      'inactive': 'bg-gray-100 text-gray-800',
-      'pending': 'bg-yellow-100 text-yellow-800',
-      'suspended': 'bg-red-100 text-red-800'
-    }
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800'
+  const getStatusColor = (isActive: boolean) => {
+    return isActive 
+      ? 'bg-green-100 text-green-800' 
+      : 'bg-gray-100 text-gray-800'
   }
 
-  const getDepartmentIcon = (department: string) => {
+  const getRoleIcon = (role: string) => {
     const icons = {
-      'Vendor Management': Users,
-      'Technical Integration': Settings,
-      'Quality Assurance': Shield,
-      'Analytics': BarChart3
+      'super_admin': Shield,
+      'clinic_manager': Users,
+      'admin': Settings,
     }
-    return icons[department as keyof typeof icons] || Briefcase
+    return icons[role as keyof typeof icons] || Briefcase
   }
 
-  const filteredStaff = staffMembers.filter(staff =>
-    `${staff.firstName} ${staff.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    staff.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    staff.department.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const getRoleLabel = (role: string) => {
+    const labels = {
+      'super_admin': 'Super Admin',
+      'clinic_manager': 'Clinic Manager',
+      'admin': 'Admin',
+    }
+    return labels[role as keyof typeof labels] || role
+  }
+
+  const openAddModal = () => {
+    setEditingStaff(null)
+    setFormData({
+      email: '',
+      name: '',
+      role: 'admin',
+      clinicId: '',
+      phone: '',
+    })
+    setModalError(null)
+    setShowStaffModal(true)
+  }
+
+  const openEditModal = (staff: AdminUser) => {
+    setEditingStaff(staff)
+    setFormData({
+      email: staff.email,
+      name: staff.name,
+      role: staff.role as any,
+      clinicId: staff.clinicId || '',
+      phone: staff.phone || '',
+    })
+    setModalError(null)
+    setShowStaffModal(true)
+  }
+
+  const closeModal = () => {
+    setShowStaffModal(false)
+    setEditingStaff(null)
+    setModalError(null)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setModalLoading(true)
+    setModalError(null)
+
+    try {
+      const url = editingStaff 
+        ? `/api/admin/users/${editingStaff.id}`
+        : '/api/admin/users'
+      
+      const method = editingStaff ? 'PATCH' : 'POST'
+      
+      const body: any = {
+        name: formData.name,
+        role: formData.role,
+        phone: formData.phone || null,
+      }
+
+      if (!editingStaff) {
+        body.email = formData.email
+      }
+
+      if (formData.role === 'clinic_manager') {
+        if (!formData.clinicId) {
+          setModalError('Clinic is required for clinic managers')
+          setModalLoading(false)
+          return
+        }
+        body.clinicId = formData.clinicId
+      } else {
+        body.clinicId = null
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save user')
+      }
+
+      await loadStaffData()
+      closeModal()
+    } catch (error) {
+      console.error('Error saving user:', error)
+      setModalError(error instanceof Error ? error.message : 'Failed to save user')
+    } finally {
+      setModalLoading(false)
+    }
+  }
+
+  const filteredStaff = staffMembers
 
   const staffStats = {
     total: staffMembers.length,
-    active: staffMembers.filter(s => s.status === 'active').length,
-    pending: staffMembers.filter(s => s.status === 'pending').length,
-    avgRating: staffMembers.reduce((sum, s) => sum + s.performance.rating, 0) / staffMembers.length,
-    totalVendorsManaged: staffMembers.reduce((sum, s) => sum + s.performance.vendorsManaged, 0),
-    avgResponseTime: staffMembers.reduce((sum, s) => sum + s.performance.responseTime, 0) / staffMembers.length
+    active: staffMembers.filter(s => s.isActive).length,
+    inactive: staffMembers.filter(s => !s.isActive).length,
+    superAdmins: staffMembers.filter(s => s.role === 'super_admin').length,
+    clinicManagers: staffMembers.filter(s => s.role === 'clinic_manager').length,
+    admins: staffMembers.filter(s => s.role === 'admin').length,
   }
 
   if (loading) {
@@ -334,7 +356,7 @@ export default function StaffManagementPage() {
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Total Staff</p>
+                        <p className="text-sm font-medium text-gray-600">Total Admin Users</p>
                         <p className="text-3xl font-bold text-gray-900">{staffStats.total}</p>
                       </div>
                       <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -343,75 +365,79 @@ export default function StaffManagementPage() {
                     </div>
                     <div className="mt-4 flex items-center text-sm">
                       <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                      <span className="text-green-600">{staffStats.active} active members</span>
+                      <span className="text-green-600">{staffStats.active} active</span>
                     </div>
                   </div>
 
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Avg Performance</p>
-                        <p className="text-3xl font-bold text-gray-900">{staffStats.avgRating.toFixed(1)}</p>
-                      </div>
-                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                        <Star className="w-6 h-6 text-green-600" />
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-center text-sm">
-                      <Star className="w-4 h-4 text-green-500 mr-1" />
-                      <span className="text-green-600">Out of 5.0</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Vendors Managed</p>
-                        <p className="text-3xl font-bold text-gray-900">{staffStats.totalVendorsManaged}</p>
+                        <p className="text-sm font-medium text-gray-600">Super Admins</p>
+                        <p className="text-3xl font-bold text-gray-900">{staffStats.superAdmins}</p>
                       </div>
                       <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                        <Briefcase className="w-6 h-6 text-purple-600" />
+                        <Shield className="w-6 h-6 text-purple-600" />
                       </div>
                     </div>
                     <div className="mt-4 flex items-center text-sm">
-                      <TrendingUp className="w-4 h-4 text-purple-500 mr-1" />
-                      <span className="text-purple-600">Across all staff</span>
+                      <Shield className="w-4 h-4 text-purple-500 mr-1" />
+                      <span className="text-purple-600">Full access</span>
                     </div>
                   </div>
 
                   <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600">Avg Response Time</p>
-                        <p className="text-3xl font-bold text-gray-900">{staffStats.avgResponseTime.toFixed(1)}h</p>
+                        <p className="text-sm font-medium text-gray-600">Clinic Managers</p>
+                        <p className="text-3xl font-bold text-gray-900">{staffStats.clinicManagers}</p>
                       </div>
-                      <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                        <Clock className="w-6 h-6 text-yellow-600" />
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <Briefcase className="w-6 h-6 text-green-600" />
                       </div>
                     </div>
                     <div className="mt-4 flex items-center text-sm">
-                      <Clock className="w-4 h-4 text-yellow-500 mr-1" />
-                      <span className="text-yellow-600">Average across team</span>
+                      <Briefcase className="w-4 h-4 text-green-500 mr-1" />
+                      <span className="text-green-600">Clinic-specific</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-gray-600">Inactive Users</p>
+                        <p className="text-3xl font-bold text-gray-900">{staffStats.inactive}</p>
+                      </div>
+                      <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                        <UserX className="w-6 h-6 text-gray-600" />
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-center text-sm">
+                      <AlertTriangle className="w-4 h-4 text-gray-500 mr-1" />
+                      <span className="text-gray-600">Deactivated</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Department Overview */}
+                {/* Role Distribution */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-6">Department Overview</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {['Vendor Management', 'Technical Integration', 'Quality Assurance', 'Analytics'].map((dept) => {
-                      const deptStaff = staffMembers.filter(s => s.department === dept)
-                      const Icon = getDepartmentIcon(dept)
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">Role Distribution</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {[
+                      { role: 'super_admin', label: 'Super Admins', icon: Shield, color: 'purple' },
+                      { role: 'clinic_manager', label: 'Clinic Managers', icon: Users, color: 'green' },
+                      { role: 'admin', label: 'Admins', icon: Settings, color: 'blue' }
+                    ].map(({ role, label, icon: Icon, color }) => {
+                      const roleStaff = staffMembers.filter(s => s.role === role)
+                      const activeCount = roleStaff.filter(s => s.isActive).length
                       
                       return (
-                        <div key={dept} className="text-center p-4 bg-gray-50 rounded-lg">
-                          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <Icon className="w-6 h-6 text-blue-600" />
+                        <div key={role} className="text-center p-4 bg-gray-50 rounded-lg">
+                          <div className={`w-12 h-12 bg-${color}-100 rounded-full flex items-center justify-center mx-auto mb-3`}>
+                            <Icon className={`w-6 h-6 text-${color}-600`} />
                           </div>
-                          <h4 className="font-medium text-gray-900 mb-1">{dept}</h4>
-                          <p className="text-2xl font-bold text-gray-900">{deptStaff.length}</p>
-                          <p className="text-sm text-gray-600">staff members</p>
+                          <h4 className="font-medium text-gray-900 mb-1">{label}</h4>
+                          <p className="text-2xl font-bold text-gray-900">{roleStaff.length}</p>
+                          <p className="text-sm text-gray-600">{activeCount} active</p>
                         </div>
                       )
                     })}
@@ -501,7 +527,7 @@ export default function StaffManagementPage() {
                     </button>
                     {hasPermission('user', 'create') && (
                       <button
-                        onClick={() => setShowStaffModal(true)}
+                        onClick={openAddModal}
                         className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                       >
                         <UserPlus className="w-4 h-4" />
@@ -511,119 +537,291 @@ export default function StaffManagementPage() {
                   </div>
                 </div>
 
+                {/* Error Message */}
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                    <div className="flex items-center space-x-2">
+                      <AlertTriangle className="w-5 h-5 text-red-600" />
+                      <p className="text-red-800">{error}</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Staff Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {filteredStaff.map((staff) => {
-                    const DeptIcon = getDepartmentIcon(staff.department)
-                    
-                    return (
-                      <div key={staff.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                        <div className="p-6">
-                          <div className="flex items-start justify-between mb-4">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                <span className="text-lg font-bold text-blue-600">
-                                  {staff.firstName[0]}{staff.lastName[0]}
+                  {filteredStaff.length === 0 ? (
+                    <div className="col-span-full text-center py-12">
+                      <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No admin users found</h3>
+                      <p className="text-gray-600">Try adjusting your search or filters</p>
+                    </div>
+                  ) : (
+                    filteredStaff.map((staff) => {
+                      const RoleIcon = getRoleIcon(staff.role)
+                      const initials = staff.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+                      
+                      return (
+                        <div key={staff.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                          <div className="p-6">
+                            <div className="flex items-start justify-between mb-4">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                  <span className="text-lg font-bold text-blue-600">
+                                    {initials}
+                                  </span>
+                                </div>
+                                <div>
+                                  <h3 className="text-lg font-bold text-gray-900">
+                                    {staff.name}
+                                  </h3>
+                                  <p className="text-sm text-gray-600">{getRoleLabel(staff.role)}</p>
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(staff.isActive)}`}>
+                                    {staff.isActive ? 'Active' : 'Inactive'}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => setSelectedStaff(staff)}
+                                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                {hasPermission('user', 'update') && (
+                                  <button 
+                                    onClick={() => openEditModal(staff)}
+                                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg"
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-3">
+                              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                                <RoleIcon className="w-4 h-4" />
+                                <span>{getRoleLabel(staff.role)}</span>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                                <Mail className="w-4 h-4" />
+                                <span className="truncate">{staff.email}</span>
+                              </div>
+                              
+                              {staff.phone && (
+                                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                                  <Phone className="w-4 h-4" />
+                                  <span>{staff.phone}</span>
+                                </div>
+                              )}
+                              
+                              {(staff.clinic || staff.managedClinic) && (
+                                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                                  <Briefcase className="w-4 h-4" />
+                                  <span>{staff.managedClinic?.name || staff.clinic?.name}</span>
+                                </div>
+                              )}
+                              
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-600">Created</span>
+                                <span className="text-sm font-medium text-gray-900">
+                                  {new Date(staff.createdAt).toLocaleDateString()}
                                 </span>
                               </div>
-                              <div>
-                                <h3 className="text-lg font-bold text-gray-900">
-                                  {staff.firstName} {staff.lastName}
-                                </h3>
-                                <p className="text-sm text-gray-600">{staff.position}</p>
-                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(staff.status)}`}>
-                                  {staff.status}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="flex space-x-2">
-                              <button
-                                onClick={() => setSelectedStaff(staff)}
-                                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                              >
-                                <Eye className="w-4 h-4" />
-                              </button>
-                              {hasPermission('user', 'update') && (
-                                <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg">
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div className="flex items-center space-x-2 text-sm text-gray-600">
-                              <DeptIcon className="w-4 h-4" />
-                              <span>{staff.department}</span>
                             </div>
                             
-                            <div className="flex items-center space-x-2 text-sm text-gray-600">
-                              <Mail className="w-4 h-4" />
-                              <span>{staff.email}</span>
-                            </div>
-                            
-                            <div className="flex items-center space-x-2 text-sm text-gray-600">
-                              <Phone className="w-4 h-4" />
-                              <span>{staff.phone}</span>
-                            </div>
-                            
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600">Performance</span>
-                              <div className="flex items-center space-x-1">
-                                <Star className="w-4 h-4 text-yellow-500" />
-                                <span className="text-sm font-medium text-gray-900">{staff.performance.rating}</span>
-                              </div>
-                            </div>
-                            
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600">Vendors Managed</span>
-                              <span className="text-sm font-medium text-gray-900">{staff.performance.vendorsManaged}</span>
-                            </div>
-                            
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600">Response Time</span>
-                              <span className="text-sm font-medium text-gray-900">{staff.performance.responseTime}h</span>
-                            </div>
-                          </div>
-                          
-                          <div className="mt-4 pt-4 border-t border-gray-200">
-                            <div className="flex space-x-2">
-                              {staff.status === 'pending' && hasPermission('user', 'update') && (
-                                <>
-                                  <button className="flex-1 bg-green-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-green-700">
-                                    <UserCheck className="w-4 h-4 inline mr-1" />
-                                    Approve
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                              <div className="flex space-x-2">
+                                {!staff.isActive && hasPermission('user', 'update') && (
+                                  <button 
+                                    onClick={async () => {
+                                      try {
+                                        const response = await fetch(`/api/admin/users/${staff.id}/reactivate`, {
+                                          method: 'POST',
+                                        })
+                                        if (response.ok) {
+                                          await loadStaffData()
+                                        }
+                                      } catch (error) {
+                                        console.error('Error reactivating user:', error)
+                                      }
+                                    }}
+                                    className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-blue-700"
+                                  >
+                                    <Unlock className="w-4 h-4 inline mr-1" />
+                                    Reactivate
                                   </button>
-                                  <button className="flex-1 bg-red-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-red-700">
-                                    <UserX className="w-4 h-4 inline mr-1" />
-                                    Reject
+                                )}
+                                {staff.isActive && hasPermission('user', 'update') && (
+                                  <button 
+                                    onClick={async () => {
+                                      if (confirm(`Are you sure you want to deactivate ${staff.name}?`)) {
+                                        try {
+                                          const response = await fetch(`/api/admin/users/${staff.id}`, {
+                                            method: 'DELETE',
+                                          })
+                                          if (response.ok) {
+                                            await loadStaffData()
+                                          }
+                                        } catch (error) {
+                                          console.error('Error deactivating user:', error)
+                                        }
+                                      }
+                                    }}
+                                    className="flex-1 bg-red-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-red-700"
+                                  >
+                                    <Lock className="w-4 h-4 inline mr-1" />
+                                    Deactivate
                                   </button>
-                                </>
-                              )}
-                              {staff.status === 'active' && hasPermission('user', 'update') && (
-                                <button className="flex-1 bg-yellow-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-yellow-700">
-                                  <Lock className="w-4 h-4 inline mr-1" />
-                                  Suspend
-                                </button>
-                              )}
-                              {staff.status === 'suspended' && hasPermission('user', 'update') && (
-                                <button className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg text-sm hover:bg-blue-700">
-                                  <Unlock className="w-4 h-4 inline mr-1" />
-                                  Reactivate
-                                </button>
-                              )}
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    )
-                  })}
+                      )
+                    })
+                  )}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </main>
+
+      {/* Add/Edit Staff Modal */}
+      {showStaffModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {editingStaff ? 'Edit Staff Member' : 'Add Staff Member'}
+                </h2>
+                <button
+                  onClick={closeModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <Plus className="w-6 h-6 rotate-45" />
+                </button>
+              </div>
+
+              {modalError && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{modalError}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    disabled={!!editingStaff}
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    placeholder="user@example.com"
+                  />
+                  {editingStaff && (
+                    <p className="text-xs text-gray-500 mt-1">Email cannot be changed</p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Role *
+                  </label>
+                  <select
+                    required
+                    value={formData.role}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="admin">Admin</option>
+                    <option value="clinic_manager">Clinic Manager</option>
+                    <option value="super_admin">Super Admin</option>
+                  </select>
+                </div>
+
+                {formData.role === 'clinic_manager' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Clinic *
+                    </label>
+                    <select
+                      required
+                      value={formData.clinicId}
+                      onChange={(e) => setFormData({ ...formData, clinicId: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select a clinic</option>
+                      {clinics.map((clinic) => (
+                        <option key={clinic.id} value={clinic.id}>
+                          {clinic.name} ({clinic.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="+1234567890"
+                  />
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    disabled={modalLoading}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={modalLoading}
+                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {modalLoading ? 'Saving...' : editingStaff ? 'Update' : 'Create'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }

@@ -123,3 +123,4 @@ patient-files/
 /.clerk/
 
 /generated/prisma
+.vercel

@@ -1,31 +1,1018 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// SKIDS Advanced - Multi-Tenant Prisma Schema
+// Database: Turso (libSQL/SQLite)
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
-enum UserRole {
-  parent
-  provider
-  admin
-}
+// ============ CORE MODELS ============
 
 model User {
-  id    String @id @default(cuid())
-  email String @unique
-  name  String
-  hashedPassword String
-  role UserRole @default(parent)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 String    @id @default(cuid())
+  clerkId            String    @unique
+  email              String    @unique
+  name               String
+  phone              String?
+  role               String    @default("parent") // super_admin, clinic_manager, parent
+  isActive           Boolean   @default(false) // Whitelist status - parents need approval
+  planId             String?   // Subscription plan assigned by admin
+  clinicId           String?   // Direct clinic reference for easier queries
+  fcmToken           String?
+  fcmTokenUpdatedAt  DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  // Relations
+  clinic          Clinic?   @relation("ClinicUsers", fields: [clinicId], references: [id])
+  managedClinic   Clinic?   @relation("ClinicManager")
+  parentProfile   ParentProfile?
+  sentMessages    Message[] @relation("SentMessages")
+  uploadedReports Report[]  @relation("UploadedReports")
+  subscription    Subscription?
+  assignedPlan    CarePlan? @relation("AssignedPlan", fields: [planId], references: [id])
+
+  // Digital Parenting Platform relations
+  authoredContent     ParentingContent[]    @relation("ContentAuthor")
+  contentEngagements  ContentEngagement[]   @relation("ContentEngagements")
+  contentBookmarks    ContentBookmark[]     @relation("ContentBookmarks")
+  expertProfile       Expert?
+  parentConsultations Consultation[]        @relation("ParentConsultations")
+  forumPosts          ForumPost[]           @relation("ForumPosts")
+  forumReplies        ForumReply[]          @relation("ForumReplies")
+  postVotes           PostVote[]            @relation("PostVotes")
+  replyVotes          ReplyVote[]           @relation("ReplyVotes")
+  developmentAssessments DevelopmentAssessment[] @relation("DevelopmentAssessments")
+  assessmentResults   AssessmentResult[]    @relation("AssessmentResults")
+  recommendationProfile RecommendationProfile?
+  
+  // Admin activity tracking
+  adminActivities     AdminActivityLog[]    @relation("AdminActivities")
+
+  @@index([clerkId])
+  @@index([email])
+  @@index([clinicId])
+  @@index([isActive])
+  @@index([planId])
+  @@index([name])
+  @@index([role])
+  @@index([name, email, role])
 }
 
+model Clinic {
+  id             String    @id @default(cuid())
+  name           String
+  code           String    @unique
+  address        String?
+  phone          String?
+  email          String?
+  whatsappNumber String?
+  isActive       Boolean   @default(true)
+  settings       String    @default("{}") // JSON stored as string
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  manager        User?     @relation("ClinicManager", fields: [managerId], references: [id])
+  managerId      String?   @unique
+  users          User[]    @relation("ClinicUsers")
+  whitelist      ParentWhitelist[]
+  parents        ParentProfile[]
+  carePlans      CarePlan[]
+  campaigns      Campaign[]
+  messages       Message[]
+
+  // Vita Workshop relations
+  contentModules ContentModule[]
+
+  @@index([code])
+  @@index([isActive])
+  @@index([name])
+  @@index([email])
+  @@index([name, code, email])
+}
+
+model ParentWhitelist {
+  id           String   @id @default(cuid())
+  email        String
+  phone        String?
+  name         String?
+  isRegistered Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  clinic       Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  clinicId     String
+
+  @@unique([clinicId, email])
+  @@index([email])
+}
+
+model ParentProfile {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @unique
+
+  clinic    Clinic   @relation(fields: [clinicId], references: [id])
+  clinicId  String
+
+  children  Child[]
+
+  @@index([clinicId])
+}
+
+model Child {
+  id            String   @id @default(cuid())
+  name          String
+  dateOfBirth   DateTime
+  gender        String?
+  bloodGroup    String?
+  allergies     String?
+  healthMetrics String   @default("{}") // JSON stored as string
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  parent       ParentProfile @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  parentId     String
+
+  assessments  Assessment[]
+  appointments Appointment[]
+  reports      Report[]
+
+  // Vita Workshop relations
+  workshopSessions         WorkshopSession[]
+  childProgress            ChildProgress?
+  workshopAssessmentResults WorkshopAssessmentResult[]
+  earnedBadges             EarnedBadge[]
+  activityCompletions      ActivityCompletion[]
+  activityFavorites        ActivityFavorite[]
+  recommendations          Recommendation[]
+
+  // Digital Parenting Platform relations
+  developmentProfile       ChildDevelopmentProfile?
+
+  @@index([parentId])
+}
+
+
+// ============ SUBSCRIPTION MODELS ============
+
+model CarePlan {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  price        Int      // in paise (INR)
+  billingCycle String   @default("monthly")
+  features     String   @default("[]") // JSON stored as string
+  isActive     Boolean  @default(true)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Clinic-specific plan (null = global)
+  clinic       Clinic?  @relation(fields: [clinicId], references: [id])
+  clinicId     String?
+
+  subscriptions Subscription[]
+  assignedUsers User[]       @relation("AssignedPlan")
+
+  @@index([clinicId])
+  @@index([isActive])
+}
+
+model Subscription {
+  id         String   @id @default(cuid())
+  status     String   @default("active") // active, paused, cancelled, expired
+  startDate  DateTime @default(now())
+  endDate    DateTime?
+  razorpayId String?  @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String   @unique
+
+  carePlan   CarePlan @relation(fields: [carePlanId], references: [id])
+  carePlanId String
+
+  @@index([status])
+  @@index([endDate])
+  @@index([carePlanId])
+  @@index([status, carePlanId])
+}
+
+// ============ HEALTH MODELS ============
+
+model Assessment {
+  id              String   @id @default(cuid())
+  type            String   // developmental, behavioral, cognitive
+  category        String?  // brain, heart, lungs
+  results         String   // JSON stored as string
+  score           Int?
+  recommendations String   @default("[]") // JSON stored as string
+  completedAt     DateTime @default(now())
+  notes           String?
+
+  child           Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  childId         String
+
+  @@index([childId])
+  @@index([type])
+  @@index([completedAt])
+}
+
+model Appointment {
+  id           String   @id @default(cuid())
+  type         String   // consultation, follow-up, assessment
+  title        String?
+  description  String?
+  scheduledAt  DateTime
+  duration     Int      @default(30) // minutes
+  status       String   @default("scheduled") // scheduled, confirmed, completed, cancelled
+  notes        String?
+  reminderSent Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  child        Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  childId      String
+
+  @@index([childId])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+model Report {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  reportType   String   @default("GENERAL") // GENERAL, LAB, ASSESSMENT, PRESCRIPTION
+  fileUrl      String
+  fileType     String   // MIME type
+  fileSize     Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  child        Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  childId      String
+
+  uploadedBy   User?    @relation("UploadedReports", fields: [uploadedById], references: [id])
+  uploadedById String?
+
+  @@index([childId])
+  @@index([createdAt])
+  @@index([reportType])
+}
+
+// ============ ENGAGEMENT MODELS ============
+
+model Campaign {
+  id             String   @id @default(cuid())
+  title          String
+  description    String?
+  content        String   @default("{}") // JSON stored as string
+  mediaUrl       String?
+  mediaType      String?  // image, video, pdf
+  targetAudience String   @default("all") // all, clinic, plan
+  targetIds      String   @default("[]") // JSON array stored as string
+  ctaText        String?
+  ctaUrl         String?
+  status         String   @default("draft") // draft, active, completed, archived
+  startDate      DateTime?
+  endDate        DateTime?
+  viewCount      Int      @default(0)
+  clickCount     Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  clinic         Clinic?  @relation(fields: [clinicId], references: [id])
+  clinicId       String?
+
+  @@index([status])
+  @@index([clinicId])
+  @@index([startDate])
+  @@index([endDate])
+}
+
+model Message {
+  id           String   @id @default(cuid())
+  content      String
+  isFromParent Boolean
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  sender       User     @relation("SentMessages", fields: [senderId], references: [id])
+  senderId     String
+
+  clinic       Clinic   @relation(fields: [clinicId], references: [id])
+  clinicId     String
+
+  childId      String?
+
+  @@index([senderId])
+  @@index([clinicId])
+  @@index([createdAt])
+  @@index([isRead])
+}
+
+// ============ SYNC & OFFLINE SUPPORT ============
+
+model SyncEvent {
+  id          String    @id @default(cuid())
+  userId      String
+  entity      String    // child, appointment, assessment
+  entityId    String
+  action      String    // create, update, delete
+  data        String    // JSON stored as string
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([processedAt])
+}
+
+
+// ============ VITA WORKSHOP MODELS ============
+
+model ContentModule {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String   // H, A, B, I, T, S (H.A.B.I.T.S. framework)
+  ageGroupMin Int
+  ageGroupMax Int
+  version     Int      @default(1)
+  status      String   @default("draft") // draft, published, archived
+  clinicId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  clinic          Clinic?           @relation(fields: [clinicId], references: [id])
+  mediaAssets     MediaAsset[]
+  activities      Activity[]
+  sessions        WorkshopSession[]
+  assessments     WorkshopAssessment[]
+
+  @@index([category])
+  @@index([status])
+  @@index([ageGroupMin, ageGroupMax])
+  @@index([clinicId])
+}
+
+model MediaAsset {
+  id        String   @id @default(cuid())
+  moduleId  String
+  type      String   // image, video, audio
+  url       String
+  filename  String
+  size      Int
+  createdAt DateTime @default(now())
+
+  module    ContentModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId])
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  moduleId    String?
+  name        String
+  description String
+  category    String   // H, A, B, I, T, S
+  type        String   // brain_break, breathing, quiz, interactive, parent_child
+  duration    Int      // in seconds
+  steps       String   @default("[]") // JSON stored as string - ActivityStep[]
+  points      Int      @default(10)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  module      ContentModule?       @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  completions ActivityCompletion[]
+  favorites   ActivityFavorite[]
+
+  @@index([category])
+  @@index([type])
+  @@index([moduleId])
+}
+
+model WorkshopSession {
+  id                   String    @id @default(cuid())
+  moduleId             String
+  childId              String
+  currentActivityIndex Int       @default(0)
+  completedActivities  String    @default("[]") // JSON stored as string - string[]
+  startedAt            DateTime  @default(now())
+  lastAccessedAt       DateTime  @default(now())
+  completedAt          DateTime?
+
+  // Relations
+  module               ContentModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  child                Child         @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([moduleId, childId])
+  @@index([childId])
+  @@index([moduleId])
+}
+
+model ChildProgress {
+  id                 String    @id @default(cuid())
+  childId            String    @unique
+  overallCompletion  Float     @default(0)
+  categoryProgress   String    @default("{}") // JSON stored as string - Record<string, number>
+  currentStreak      Int       @default(0)
+  longestStreak      Int       @default(0)
+  lastEngagementDate DateTime?
+  totalPoints        Int       @default(0)
+  updatedAt          DateTime  @updatedAt
+
+  // Relations
+  child              Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([childId])
+}
+
+model WorkshopAssessment {
+  id           String   @id @default(cuid())
+  moduleId     String
+  title        String
+  questions    String   @default("[]") // JSON stored as string - Question[]
+  passingScore Int      @default(60)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  module       ContentModule              @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  results      WorkshopAssessmentResult[]
+
+  @@index([moduleId])
+}
+
+model WorkshopAssessmentResult {
+  id             String   @id @default(cuid())
+  assessmentId   String
+  childId        String
+  score          Float
+  categoryScores String   @default("{}") // JSON stored as string - Record<string, number>
+  answers        String   @default("[]") // JSON stored as string - AnswerRecord[]
+  completedAt    DateTime @default(now())
+
+  // Relations
+  assessment     WorkshopAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  child          Child              @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([childId])
+  @@index([assessmentId])
+}
+
+model Badge {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  imageUrl    String
+  type        String   // module, streak, milestone, activity
+  criteria    String   @default("{}") // JSON stored as string - BadgeCriteria
+  createdAt   DateTime @default(now())
+
+  // Relations
+  earnedBadges EarnedBadge[]
+}
+
+model EarnedBadge {
+  id       String   @id @default(cuid())
+  badgeId  String
+  childId  String
+  earnedAt DateTime @default(now())
+
+  // Relations
+  badge    Badge    @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  child    Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([badgeId, childId])
+  @@index([childId])
+  @@index([badgeId])
+}
+
+model ActivityCompletion {
+  id          String   @id @default(cuid())
+  activityId  String
+  childId     String
+  points      Int
+  completedAt DateTime @default(now())
+
+  // Relations
+  activity    Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  child       Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([childId])
+  @@index([activityId])
+}
+
+model ActivityFavorite {
+  id         String   @id @default(cuid())
+  activityId String
+  childId    String
+  createdAt  DateTime @default(now())
+
+  // Relations
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  child      Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([activityId, childId])
+  @@index([childId])
+  @@index([activityId])
+}
+
+model Recommendation {
+  id        String   @id @default(cuid())
+  childId   String
+  moduleId  String
+  priority  Int
+  rationale String
+  category  String
+  basedOn   String   // assessment, completion, engagement
+  createdAt DateTime @default(now())
+
+  // Relations
+  child     Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@index([childId])
+  @@index([moduleId])
+}
+
+model WeeklyChallenge {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  targetValue Int
+  startDate   DateTime
+  endDate     DateTime
+  createdAt   DateTime @default(now())
+
+  // Relations
+  progress    ChallengeProgress[]
+
+  @@index([startDate])
+  @@index([endDate])
+}
+
+model ChallengeProgress {
+  id          String    @id @default(cuid())
+  challengeId String
+  parentId    String
+  childId     String
+  progress    Int       @default(0)
+  completedAt DateTime?
+
+  // Relations
+  challenge   WeeklyChallenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@unique([challengeId, parentId, childId])
+  @@index([challengeId])
+  @@index([parentId])
+  @@index([childId])
+}
+
+model ParentProgress {
+  id                 String    @id @default(cuid())
+  parentId           String    @unique
+  overallCompletion  Float     @default(0)
+  categoryProgress   String    @default("{}") // JSON stored as string
+  totalPoints        Int       @default(0)
+  updatedAt          DateTime  @updatedAt
+
+  @@index([parentId])
+}
+
+model ParentingTip {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  category    String   // H, A, B, I, T, S
+  ageGroupMin Int
+  ageGroupMax Int
+  createdAt   DateTime @default(now())
+
+  @@index([category])
+  @@index([ageGroupMin, ageGroupMax])
+}
+
+// ============ DIGITAL PARENTING PLATFORM MODELS ============
+
+model ParentingContent {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  content       String
+  contentType   String   // article, video, infographic, checklist, guide
+  category      String   // H, A, B, I, T, S, general
+  ageGroupMin   Int
+  ageGroupMax   Int
+  expertLevel   String   @default("beginner") // beginner, intermediate, advanced
+  tags          String   @default("[]") // JSON array
+  authorId      String
+  status        String   @default("draft") // draft, review, published, archived
+  publishedAt   DateTime?
+  viewCount     Int      @default(0)
+  rating        Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  author        User     @relation("ContentAuthor", fields: [authorId], references: [id])
+  engagements   ContentEngagement[]
+  bookmarks     ContentBookmark[]
+  recommendations ContentRecommendation[]
+
+  @@index([category])
+  @@index([status])
+  @@index([ageGroupMin, ageGroupMax])
+  @@index([publishedAt])
+  @@index([rating])
+}
+
+model ContentEngagement {
+  id          String   @id @default(cuid())
+  contentId   String
+  userId      String
+  eventType   String   // view, click, share, bookmark, complete, rate
+  duration    Int?     // in seconds
+  metadata    String?  @default("{}") // JSON
+  timestamp   DateTime @default(now())
+
+  // Relations
+  content     ParentingContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  user        User             @relation("ContentEngagements", fields: [userId], references: [id])
+
+  @@index([contentId])
+  @@index([userId])
+  @@index([timestamp])
+  @@index([eventType])
+}
+
+model ContentBookmark {
+  id        String   @id @default(cuid())
+  contentId String
+  userId    String
+  tags      String   @default("[]") // JSON array for organization
+  createdAt DateTime @default(now())
+
+  // Relations
+  content   ParentingContent @relation(fields: [contentId], references: [id], onDelete: Cascade)
+  user      User             @relation("ContentBookmarks", fields: [userId], references: [id])
+
+  @@unique([contentId, userId])
+  @@index([userId])
+}
+
+model ContentRecommendation {
+  id          String   @id @default(cuid())
+  profileId   String
+  contentId   String
+  score       Float
+  reason      String
+  category    String
+  priority    String   // high, medium, low
+  generatedAt DateTime @default(now())
+  viewedAt    DateTime?
+  clickedAt   DateTime?
+
+  // Relations
+  profile     RecommendationProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  content     ParentingContent      @relation(fields: [contentId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([generatedAt])
+  @@index([priority])
+}
+
+model Expert {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  specializations String   @default("[]") // JSON array
+  credentials     String   @default("[]") // JSON array
+  bio             String
+  rating          Float    @default(0)
+  availability    String   @default("[]") // JSON array of AvailabilitySlot
+  hourlyRate      Int?
+  languages       String   @default("[]") // JSON array
+  verified        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  user            User           @relation(fields: [userId], references: [id])
+  consultations   Consultation[]
+
+  @@index([verified])
+  @@index([rating])
+}
+
+model Consultation {
+  id             String    @id @default(cuid())
+  parentId       String
+  expertId       String
+  scheduledAt    DateTime
+  duration       Int       // in minutes
+  status         String    @default("scheduled") // scheduled, in_progress, completed, cancelled
+  topic          String
+  notes          String?
+  summary        String?
+  actionItems    String?   @default("[]") // JSON array
+  followUpNeeded Boolean   @default(false)
+  rating         Int?
+  feedback       String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  parent         User      @relation("ParentConsultations", fields: [parentId], references: [id])
+  expert         Expert    @relation(fields: [expertId], references: [id])
+
+  @@index([parentId])
+  @@index([expertId])
+  @@index([scheduledAt])
+  @@index([status])
+}
+
+model ForumPost {
+  id           String   @id @default(cuid())
+  authorId     String
+  title        String
+  content      String
+  category     String
+  tags         String   @default("[]") // JSON array
+  childAgeGroup String?
+  isAnonymous  Boolean  @default(false)
+  status       String   @default("active") // active, flagged, removed
+  upvotes      Int      @default(0)
+  downvotes    Int      @default(0)
+  replyCount   Int      @default(0)
+  viewCount    Int      @default(0)
+  isPinned     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  author       User        @relation("ForumPosts", fields: [authorId], references: [id])
+  replies      ForumReply[]
+  votes        PostVote[]
+
+  @@index([category])
+  @@index([status])
+  @@index([createdAt])
+  @@index([upvotes])
+}
+
+model ForumReply {
+  id              String   @id @default(cuid())
+  postId          String
+  authorId        String
+  content         String
+  parentReplyId   String?
+  isExpertResponse Boolean  @default(false)
+  upvotes         Int      @default(0)
+  downvotes       Int      @default(0)
+  status          String   @default("active") // active, flagged, removed
+  createdAt       DateTime @default(now())
+
+  // Relations
+  post            ForumPost    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author          User         @relation("ForumReplies", fields: [authorId], references: [id])
+  parentReply     ForumReply?  @relation("ReplyThread", fields: [parentReplyId], references: [id])
+  childReplies    ForumReply[] @relation("ReplyThread")
+  votes           ReplyVote[]
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([parentReplyId])
+}
+
+model PostVote {
+  id     String @id @default(cuid())
+  postId String
+  userId String
+  vote   String // up, down
+
+  // Relations
+  post   ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user   User      @relation("PostVotes", fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+}
+
+model ReplyVote {
+  id      String @id @default(cuid())
+  replyId String
+  userId  String
+  vote    String // up, down
+
+  // Relations
+  reply   ForumReply @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  user    User       @relation("ReplyVotes", fields: [userId], references: [id])
+
+  @@unique([replyId, userId])
+}
+
+model DevelopmentMilestone {
+  id           String   @id @default(cuid())
+  category     String   // physical, cognitive, social, emotional, language
+  ageMonthsMin Int
+  ageMonthsMax Int
+  title        String
+  description  String
+  indicators   String   @default("[]") // JSON array
+  isRequired   Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  progress     MilestoneProgress[]
+
+  @@index([category])
+  @@index([ageMonthsMin, ageMonthsMax])
+}
+
+model ChildDevelopmentProfile {
+  id              String    @id @default(cuid())
+  childId         String    @unique
+  overallProgress Float     @default(0)
+  lastUpdated     DateTime  @default(now())
+  createdAt       DateTime  @default(now())
+
+  // Relations
+  child           Child              @relation(fields: [childId], references: [id], onDelete: Cascade)
+  milestones      MilestoneProgress[]
+  concerns        DevelopmentConcern[]
+  assessments     DevelopmentAssessment[]
+
+  @@index([childId])
+}
+
+model MilestoneProgress {
+  id                    String   @id @default(cuid())
+  profileId             String
+  milestoneId           String
+  status                String   // not_started, in_progress, achieved, delayed
+  achievedAt            DateTime?
+  notes                 String?
+  parentObservations    String?  @default("[]") // JSON array
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  profile               ChildDevelopmentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  milestone             DevelopmentMilestone    @relation(fields: [milestoneId], references: [id])
+
+  @@unique([profileId, milestoneId])
+  @@index([profileId])
+  @@index([status])
+}
+
+model DevelopmentConcern {
+  id          String   @id @default(cuid())
+  profileId   String
+  category    String
+  description String
+  severity    String   // low, medium, high
+  status      String   @default("active") // active, resolved, monitoring
+  identifiedAt DateTime @default(now())
+  resolvedAt  DateTime?
+  notes       String?
+
+  // Relations
+  profile     ChildDevelopmentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([status])
+  @@index([severity])
+}
+
+model DevelopmentAssessment {
+  id          String   @id @default(cuid())
+  profileId   String
+  assessorId  String   // parent or expert
+  results     String   // JSON assessment results
+  score       Float
+  recommendations String @default("[]") // JSON array
+  completedAt DateTime @default(now())
+
+  // Relations
+  profile     ChildDevelopmentProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  assessor    User                    @relation("DevelopmentAssessments", fields: [assessorId], references: [id])
+
+  @@index([profileId])
+  @@index([completedAt])
+}
+
+model ParentingAssessment {
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  category      String
+  questions     String   // JSON array of AssessmentQuestion
+  scoringRubric String   // JSON ScoringRubric
+  validatedBy   String   @default("[]") // JSON array
+  version       Int      @default(1)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  results       AssessmentResult[]
+
+  @@index([category])
+  @@index([isActive])
+}
+
+model AssessmentResult {
+  id            String   @id @default(cuid())
+  assessmentId  String
+  parentId      String
+  responses     String   // JSON array of QuestionResponse
+  scores        String   // JSON array of DomainScore
+  overallScore  Float
+  feedback      String   // JSON PersonalizedFeedback
+  recommendations String @default("[]") // JSON array
+  completedAt   DateTime @default(now())
+
+  // Relations
+  assessment    ParentingAssessment @relation(fields: [assessmentId], references: [id])
+  parent        User                @relation("AssessmentResults", fields: [parentId], references: [id])
+
+  @@index([parentId])
+  @@index([assessmentId])
+  @@index([completedAt])
+}
+
+model RecommendationProfile {
+  id                    String   @id @default(cuid())
+  parentId              String   @unique
+  childrenAges          String   @default("[]") // JSON array
+  interests             String   @default("[]") // JSON array
+  parentingStyle        String?
+  challenges            String   @default("[]") // JSON array
+  preferredContentTypes String   @default("[]") // JSON array
+  lastUpdated           DateTime @default(now())
+  createdAt             DateTime @default(now())
+
+  // Relations
+  parent                User                    @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  recommendations       ContentRecommendation[]
+
+  @@index([parentId])
+}
+
+
+// ============ MONITORING & LOGGING MODELS ============
+// Feature: skids-e2e-deployment
+
+model HealthCheckLog {
+  id           String   @id @default(cuid())
+  status       String   // healthy, degraded, unhealthy
+  checks       String   // JSON of individual check results
+  responseTime Int      // in milliseconds
+  timestamp    DateTime @default(now())
+
+  @@index([timestamp])
+  @@index([status])
+}
+
+model ErrorLog {
+  id        String   @id @default(cuid())
+  level     String   // error, warn, info
+  message   String
+  stack     String?
+  context   String   // JSON with request details
+  userId    String?
+  timestamp DateTime @default(now())
+
+  @@index([timestamp])
+  @@index([level])
+  @@index([userId])
+}
+
+model AdminActivityLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String   // created_clinic, updated_campaign, approved_parent, etc.
+  entityType String   // clinic, campaign, user, care_plan, etc.
+  entityId   String
+  metadata   String   @default("{}") // JSON stored as string
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  user       User     @relation("AdminActivities", fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([timestamp])
+  @@index([action])
+  @@index([entityType, entityId])
+}
