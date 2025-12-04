@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { ContentWorkflowService } from '@/lib/parenting/content-workflow-service';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/parenting/admin/content/stale - Get stale content
  */

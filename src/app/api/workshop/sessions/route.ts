@@ -9,6 +9,9 @@ import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { startSession, getChildSessions } from '@/lib/workshop/session-service';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // POST - Start or resume a session
 export async function POST(request: NextRequest) {
   try {

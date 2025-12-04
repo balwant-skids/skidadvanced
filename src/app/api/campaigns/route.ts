@@ -9,6 +9,9 @@ import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { notifyNewCampaign } from '@/lib/notification-triggers';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // POST - Create a new campaign (admin only)
 export async function POST(request: NextRequest) {
   try {

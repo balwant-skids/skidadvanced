@@ -3,6 +3,9 @@ import prisma from '@/lib/prisma'
 import { requireSuperAdmin } from '@/lib/auth-utils'
 import { logAdminActivity, AdminActions, EntityTypes } from '@/lib/utils/activity-logger'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 /**
  * POST /api/admin/users/[id]/reactivate
  * Reactivate a deactivated admin user

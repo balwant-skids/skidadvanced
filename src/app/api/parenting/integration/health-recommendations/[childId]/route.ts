@@ -3,6 +3,9 @@ import { auth } from '@clerk/nextjs/server';
 import { SKIDSIntegrationService } from '@/lib/parenting/skids-integration-service';
 import { prisma } from '@/lib/prisma';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/parenting/integration/health-recommendations/[childId] - Get health-based recommendations
  */

@@ -9,6 +9,9 @@ import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { notifyNewMessage } from '@/lib/notification-triggers';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // POST - Send a message
 export async function POST(request: NextRequest) {
   try {

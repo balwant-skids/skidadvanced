@@ -9,6 +9,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import {
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
   getModule,
   updateModule,
   archiveModule,

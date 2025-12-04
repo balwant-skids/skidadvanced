@@ -10,6 +10,9 @@ import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { notifyNewCampaign } from '@/lib/notification-triggers';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // GET - Get campaign details
 export async function GET(
   request: NextRequest,

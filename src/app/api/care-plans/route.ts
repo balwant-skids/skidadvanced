@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getOrCreateUser, requireSuperAdmin } from '@/lib/auth-utils'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // GET /api/care-plans - List available plans
 export async function GET(req: NextRequest) {
   try {

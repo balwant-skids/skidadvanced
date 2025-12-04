@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { getOrCreateUser } from '@/lib/auth-utils'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // POST /api/subscriptions - Create subscription after payment
 export async function POST(req: NextRequest) {
   try {

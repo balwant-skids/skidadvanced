@@ -8,6 +8,9 @@ import { auth } from '@clerk/nextjs/server';
 import { prisma } from '@/lib/prisma';
 import { publishModule } from '@/lib/workshop/content-service';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
