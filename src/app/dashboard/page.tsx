@@ -176,6 +176,16 @@ export default function Dashboard() {
   const [showInstallBanner, setShowInstallBanner] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'health' | 'education' | 'appointments'>('overview')
 
+  // Redirect admin users to admin dashboard
+  useEffect(() => {
+    if (isAuthenticated && userDetails) {
+      const adminRoles = ['super_admin', 'clinic_manager', 'admin']
+      if (adminRoles.includes(userDetails.role)) {
+        window.location.href = '/admin/dashboard'
+      }
+    }
+  }, [isAuthenticated, userDetails])
+
   // PWA Installation and Offline Detection
   useEffect(() => {
     // Check online status

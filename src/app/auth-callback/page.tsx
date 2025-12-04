@@ -16,13 +16,33 @@ export default function AuthCallbackPage() {
       return
     }
 
-    // Fetch user role from our database
+    // Check if user is a super admin by email
+    const superAdminEmails = [
+      'satish@skids.health',
+      'drpratichi@skids.health',
+      'satissh@skids.health'
+    ]
+    
+    const userEmail = user.primaryEmailAddress?.emailAddress || ''
+    
+    // If super admin email, redirect immediately
+    if (superAdminEmails.includes(userEmail.toLowerCase())) {
+      router.push('/admin/dashboard')
+      return
+    }
+
+    // Otherwise, fetch user role from our database
     fetch('/api/users/status', {
       headers: {
         'x-clerk-user-id': user.id,
       },
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error('Failed to fetch user status')
+        }
+        return res.json()
+      })
       .then((data) => {
         const { role } = data
 
